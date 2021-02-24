@@ -15,73 +15,83 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.layout = html.Div([
-    html.Label('Dropdown'),
+    html.Label('Indak / Opdak'),
     dcc.Dropdown(
-        id='dropdown_1',
+        id='Daksysteem',
         options=[
-            {'label': 'New York City', 'value': 'NYC'},
-            {'label': u'Montréal', 'value': 'MTL'},
-            {'label': 'San Francisco', 'value': 'SF'}
+            {'label': 'Indak', 'value': 'Indak'},
+            {'label': 'Opdak', 'value': 'Opdak'},
         ],
-        value='MTL'
+        value='Indak'
     ),
 
-    html.Label('Multi-Select Dropdown'),
+    html.Label('Landscape / Portrait'),
     dcc.Dropdown(
-        id='dropdown_2',
+        id='Indeling',
         options=[
-            {'label': 'New York City', 'value': 'NYC'},
-            {'label': u'Montréal', 'value': 'MTL'},
-            {'label': 'San Francisco', 'value': 'SF'}
+            {'label': 'Landscape', 'value': 'LND'},
+            {'label': 'Portrait', 'value': 'POR'},
         ],
-        value=['MTL', 'SF'],
-        multi=True
+        value='Landscape'
     ),
 
-    html.Label('Radio Items'),
-    dcc.RadioItems(
+    html.Label('Paneellengte [mm]'),
+    dcc.Input(id='Paneellengte',value='0',type='value'),
+
+    html.Label('Paneelbreedte [mm]'),
+    dcc.Input(id='Paneelbreedte',value='0',type='value'),
+
+    html.Label('Paneeldikte [mm]'),
+    dcc.Input(id='Paneeldikte',value='0',type='value'),
+
+    html.Label('Aantal rijen'),
+    dcc.Input(id='Rijen',value='0',type='value'),
+
+    html.Label("Aantal kolommen"),
+    dcc.Input(id='Kolommen',value='0',type='value'),
+
+    html.Label("Kleur frame"),
+    dcc.Dropdown(
+        id='KleurFrame',
         options=[
-            {'label': 'New York City', 'value': 'NYC'},
-            {'label': u'Montréal', 'value': 'MTL'},
-            {'label': 'San Francisco', 'value': 'SF'}
+            {'label': 'ALU', 'value': 'ALU'},
+            {'label': 'ALU Zwart', 'value': 'ALZ'}
         ],
-        value='MTL'
+        value='ALU'
     ),
 
-    html.Label('Checkboxes'),
-    dcc.Checklist(
+    html.Label("Plaat / Paneel"),
+    dcc.Dropdown(
+        id='Toepassing',
         options=[
-            {'label': 'New York City', 'value': 'NYC'},
-            {'label': u'Montréal', 'value': 'MTL'},
-            {'label': 'San Francisco', 'value': 'SF'}
+            {'label': 'Plaat', 'value': 'PLA'},
+            {'label': 'Paneel', 'value': 'PAN'}
         ],
-        value=['MTL', 'SF']
+        value='Paneel'
     ),
-
-    html.Label('Text Input'),
-    dcc.Input(value='MTL', type='text'),
 
     html.Label('Slider'),
     dcc.Slider(
-        min=0,
-        max=9,
-        marks={i: 'Label {}'.format(i) if i == 1 else str(i) for i in range(1, 6)},
+        min=5,
+        max=90,
         value=5,
     ),
+    
     html.Br(),
     html.Button('Download document', id='button'),
     html.Br(),
-    html.Div(id='output_1'),
     html.P(id='placeholder'),
-], style={'columnCount': 2})
+    html.Div(id='lengte_rail'),
+], style={'columnCount': 3})
 
 @app.callback(
-    Output(component_id='output_1', component_property='children'),
-    Input(component_id='dropdown_1', component_property='value'),
-    Input(component_id='dropdown_2', component_property='value')
+    Output(component_id='lengte_rail', component_property='children'),
+    Input(component_id='Indeling', component_property='value'),
+    Input(component_id='Paneelbreedte', component_property='value'),
+    Input(component_id='Rijen', component_property= 'value')
 )
-def update_output_div(input_value_1, input_value_2):
-    return input_value_1 + ' en ' + ', '.join(input_value_2)
+def update_output_div(indeling, paneelbreedte, rijen):
+    return (input_value_1 + ' en ' + ', '.join(input_value_2)
 
 @app.callback(
     Output("placeholder", "children"),
