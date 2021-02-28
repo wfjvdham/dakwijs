@@ -7,91 +7,122 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import dash_bootstrap_components as dbc
+import dash_table
+import math
+
+import pandas as pd
+
 from docx import Document
-from docx.shared import Inches
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2])
+df['count'] = 0
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-app.layout = html.Div([
-    html.Label('Indak / Opdak'),
-    dcc.Dropdown(
-        id='Daksysteem',
-        options=[
-            {'label': 'Indak', 'value': 'Indak'},
-            {'label': 'Opdak', 'value': 'Opdak'},
-        ],
-        value='Indak'
-    ),
+app.layout = dbc.Container([
+    dbc.Row([
+        dbc.Col([
+            dbc.Label('Indak / Opdak'),
+            dcc.Dropdown(
+                id='Daksysteem',
+                options=[
+                    {'label': 'Indak', 'value': 'Indak'},
+                    {'label': 'Opdak', 'value': 'Opdak'},
+                ],
+                value='Indak'
+            ),
 
-    html.Label('Landscape / Portrait'),
-    dcc.Dropdown(
-        id='Indeling',
-        options=[
-            {'label': 'Landscape', 'value': 'LND'},
-            {'label': 'Portrait', 'value': 'POR'},
-        ],
-        value='Landscape'
-    ),
+            dbc.Label('Landscape / Portrait'),
+            dcc.Dropdown(
+                id='Indeling',
+                options=[
+                    {'label': 'Landscape', 'value': 'LND'},
+                    {'label': 'Portrait', 'value': 'POR'},
+                ],
+                value='Landscape'
+            ),
 
-    html.Label('Paneellengte [mm]'),
-    dcc.Input(id='Paneellengte',value='0',type='value'),
+            dbc.Label('Paneellengte [mm]'),
+            dcc.Input(id='Paneellengte', value=0, min=0, type='number'),
 
-    html.Label('Paneelbreedte [mm]'),
-    dcc.Input(id='Paneelbreedte',value='0',type='value'),
+            dbc.Label('Paneelbreedte [mm]'),
+            dcc.Input(id='Paneelbreedte', value=0, type='number'),
 
-    html.Label('Paneeldikte [mm]'),
-    dcc.Input(id='Paneeldikte',value='0',type='value'),
+            dbc.Label('Paneeldikte [mm]'),
+            dcc.Input(id='Paneeldikte', value=0, type='number'),
 
-    html.Label('Aantal rijen'),
-    dcc.Input(id='Rijen',value='0',type='value'),
+            dbc.Label('Aantal rijen'),
+            dcc.Input(id='Rijen', value=0, type='number'),
 
-    html.Label("Aantal kolommen"),
-    dcc.Input(id='Kolommen',value='0',type='value'),
+            dbc.Label("Aantal kolommen"),
+            dcc.Input(id='Kolommen', value=0, type='number'),
 
-    html.Label("Kleur frame"),
-    dcc.Dropdown(
-        id='KleurFrame',
-        options=[
-            {'label': 'ALU', 'value': 'ALU'},
-            {'label': 'ALU Zwart', 'value': 'ALZ'}
-        ],
-        value='ALU'
-    ),
+            dbc.Label("Kleur frame"),
+            dcc.Dropdown(
+                id='KleurFrame',
+                options=[
+                    {'label': 'ALU', 'value': 'ALU'},
+                    {'label': 'ALU Zwart', 'value': 'ALZ'}
+                ],
+                value='ALU'
+            ),
 
-    html.Label("Plaat / Paneel"),
-    dcc.Dropdown(
-        id='Toepassing',
-        options=[
-            {'label': 'Plaat', 'value': 'PLA'},
-            {'label': 'Paneel', 'value': 'PAN'}
-        ],
-        value='Paneel'
-    ),
+            dbc.Label("Plaat / Paneel"),
+            dcc.Dropdown(
+                id='Toepassing',
+                options=[
+                    {'label': 'Plaat', 'value': 'PLA'},
+                    {'label': 'Paneel', 'value': 'PAN'}
+                ],
+                value='Paneel'
+            ),
 
-    html.Label('Slider'),
-    dcc.Slider(
-        min=5,
-        max=90,
-        value=5,
-    ),
-    
-    html.Br(),
-    html.Button('Download document', id='button'),
-    html.Br(),
-    html.P(id='placeholder'),
-    html.Div(id='lengte_rail'),
-], style={'columnCount': 3})
+            dbc.Label('Slider'),
+            dcc.Slider(
+                min=5,
+                max=90,
+                value=5,
+            ),
+        ], md=4),
+        dbc.Col([
+            dbc.Button('Download document', id='button'),
+            html.P(id='placeholder'),
+        ], md=4),
+        dbc.Col([
+            dbc.Label('Lengte Rail'),
+            html.Div(id='lengte_rail'),
+        ], md=4),
+    ]),
+    dbc.Row([
+        html.Div(id='table')
+    ])
+], fluid=True)
 
 @app.callback(
     Output(component_id='lengte_rail', component_property='children'),
     Input(component_id='Indeling', component_property='value'),
     Input(component_id='Paneelbreedte', component_property='value'),
-    Input(component_id='Rijen', component_property= 'value')
+    Input(component_id='Rijen', component_property='value')
 )
 def update_output_div(indeling, paneelbreedte, rijen):
-    return (input_value_1 + ' en ' + ', '.join(input_value_2)
+    result = paneelbreedte * rijen
+    if indeling == 'LND':
+        result += 10
+    return result
+
+@app.callback(
+    Output('table', 'children'),
+    Input('lengte_rail', 'children')
+)
+def update_datatable(rijen):
+    df.loc[df['id'] == 770003, ['count']] = round(1.123345667, 1)
+    df.loc[df['id'] == 770212, ['count']] = math.ceil(rijen) * 2
+
+    df_result = df.loc[df['count'] > 0]
+    data = df_result.to_dict('rows')
+    columns = [{"name": i, "id": i, } for i in df.columns]
+    return dash_table.DataTable(data=data, columns=columns)
 
 @app.callback(
     Output("placeholder", "children"),
