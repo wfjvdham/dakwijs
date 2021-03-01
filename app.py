@@ -15,6 +15,13 @@ import pandas as pd
 
 from docx import Document
 
+from mailmerge import MailMerge
+from datetime import date
+
+template = "template.docx"
+document = MailMerge(template)
+print(document.get_merge_fields())
+
 df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2])
 df['count'] = 0
 
@@ -23,79 +30,87 @@ app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.layout = dbc.Container([
     dbc.Row([
         dbc.Col([
-            dbc.Label('Indak / Opdak'),
-            dcc.Dropdown(
-                id='Daksysteem',
-                options=[
-                    {'label': 'Indak', 'value': 'Indak'},
-                    {'label': 'Opdak', 'value': 'Opdak'},
-                ],
-                value='Indak'
-            ),
-
-            dbc.Label('Landscape / Portrait'),
-            dcc.Dropdown(
-                id='Indeling',
-                options=[
-                    {'label': 'Landscape', 'value': 'LND'},
-                    {'label': 'Portrait', 'value': 'POR'},
-                ],
-                value='Landscape'
-            ),
-
-            dbc.Label('Paneellengte [mm]'),
-            dcc.Input(id='Paneellengte', value=0, min=0, type='number'),
-
-            dbc.Label('Paneelbreedte [mm]'),
-            dcc.Input(id='Paneelbreedte', value=0, type='number'),
-
-            dbc.Label('Paneeldikte [mm]'),
-            dcc.Input(id='Paneeldikte', value=0, type='number'),
-
-            dbc.Label('Aantal rijen'),
-            dcc.Input(id='Rijen', value=0, type='number'),
-
-            dbc.Label("Aantal kolommen"),
-            dcc.Input(id='Kolommen', value=0, type='number'),
-
-            dbc.Label("Kleur frame"),
-            dcc.Dropdown(
-                id='KleurFrame',
-                options=[
-                    {'label': 'ALU', 'value': 'ALU'},
-                    {'label': 'ALU Zwart', 'value': 'ALZ'}
-                ],
-                value='ALU'
-            ),
-
-            dbc.Label("Plaat / Paneel"),
-            dcc.Dropdown(
-                id='Toepassing',
-                options=[
-                    {'label': 'Plaat', 'value': 'PLA'},
-                    {'label': 'Paneel', 'value': 'PAN'}
-                ],
-                value='Paneel'
-            ),
-
-            dbc.Label('Slider'),
-            dcc.Slider(
-                min=5,
-                max=90,
-                value=5,
-            ),
-        ], md=4),
+            dbc.FormGroup([
+                dbc.Label('Indak / Opdak', html_for='Daksysteem'),
+                dcc.Dropdown(
+                    id='Daksysteem',
+                    options=[
+                        {'label': 'Indak', 'value': 'Indak'},
+                        {'label': 'Opdak', 'value': 'Opdak'},
+                    ],
+                    value='Indak'
+                ),
+            ]),
+            dbc.FormGroup([
+                dbc.Label('Landscape / Portrait', html_for='Indeling'),
+                dcc.Dropdown(
+                    id='Indeling',
+                    options=[
+                        {'label': 'Landscape', 'value': 'LND'},
+                        {'label': 'Portrait', 'value': 'POR'},
+                    ],
+                    value='Landscape'
+                ),
+            ]),
+            dbc.FormGroup([
+                dbc.Label('Paneellengte [mm]', html_for='Paneellengte'),
+                dbc.Input(id='Paneellengte', value=0, min=0, type='number'),
+            ]),
+            dbc.FormGroup([
+                dbc.Label('Paneelbreedte [mm]', html_for='Paneelbreedte'),
+                dbc.Input(id='Paneelbreedte', value=0, type='number'),
+            ]),
+            dbc.FormGroup([
+                dbc.Label('Paneeldikte [mm]', html_for='Paneeldikte'),
+                dbc.Input(id='Paneeldikte', value=0, type='number'),
+            ]),
+            dbc.FormGroup([
+                dbc.Label('Aantal rijen', html_for='Rijen'),
+                dbc.Input(id='Rijen', value=0, type='number'),
+            ]),
+            dbc.FormGroup([
+                dbc.Label("Aantal kolommen", html_for='Kolommen'),
+                dbc.Input(id='Kolommen', value=0, type='number'),
+            ]),
+            dbc.FormGroup([
+                dbc.Label("Kleur frame", html_for='KleurFrame'),
+                dcc.Dropdown(
+                    id='KleurFrame',
+                    options=[
+                        {'label': 'ALU', 'value': 'ALU'},
+                        {'label': 'ALU Zwart', 'value': 'ALZ'}
+                    ],
+                    value='ALU'
+                ),
+            ]),
+            dbc.FormGroup([
+                dbc.Label("Plaat / Paneel", html_for='Toepassing'),
+                dcc.Dropdown(
+                    id='Toepassing',
+                    options=[
+                        {'label': 'Plaat', 'value': 'PLA'},
+                        {'label': 'Paneel', 'value': 'PAN'}
+                    ],
+                    value='Paneel'
+                ),
+            ])
+        ], width={"size": 3, "offset": 1}),
         dbc.Col([
             dbc.Button('Download document', id='button'),
             html.P(id='placeholder'),
-        ], md=4),
-        dbc.Col([
-            dbc.Label('Lengte Rail'),
-            html.Div(id='lengte_rail'),
-        ], md=4),
-    ]),
+        ], width=4),
+        dbc.Col(
+            html.Div([
+                dbc.Label('Lengte Rail', html_for='lengte_rail'),
+                html.Div(id='lengte_rail'),
+            ]),
+            width=4
+        ),
+    ], form=True),
     dbc.Row([
-        html.Div(id='table')
+        dbc.Col([
+            html.Div(id='table')
+        ], width={"size": 10, "offset": 1})
     ])
 ], fluid=True)
 
