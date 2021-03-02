@@ -13,117 +13,366 @@ import math
 
 import pandas as pd
 
-from docx import Document
-
 from mailmerge import MailMerge
-from datetime import date
 
 template = "template.docx"
 document = MailMerge(template)
 print(document.get_merge_fields())
+document.merge(Jannes="dit is een test")
+document.write('test-output.docx')
 
 df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2])
 df['count'] = 0
 
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(external_stylesheets=[dbc.themes.JOURNAL])
 
-app.layout = dbc.Container([
-    dbc.Row([
-        dbc.Col([
-            dbc.FormGroup([
-                dbc.Label('Indak / Opdak', html_for='Daksysteem'),
-                dcc.Dropdown(
-                    id='Daksysteem',
-                    options=[
-                        {'label': 'Indak', 'value': 'Indak'},
-                        {'label': 'Opdak', 'value': 'Opdak'},
-                    ],
-                    value='Indak'
-                ),
-            ]),
-            dbc.FormGroup([
-                dbc.Label('Landscape / Portrait', html_for='Indeling'),
-                dcc.Dropdown(
-                    id='Indeling',
-                    options=[
-                        {'label': 'Landscape', 'value': 'LND'},
-                        {'label': 'Portrait', 'value': 'POR'},
-                    ],
-                    value='Landscape'
-                ),
-            ]),
-            dbc.FormGroup([
-                dbc.Label('Paneellengte [mm]', html_for='Paneellengte'),
-                dbc.Input(id='Paneellengte', value=0, min=0, type='number'),
-            ]),
-            dbc.FormGroup([
-                dbc.Label('Paneelbreedte [mm]', html_for='Paneelbreedte'),
-                dbc.Input(id='Paneelbreedte', value=0, type='number'),
-            ]),
-            dbc.FormGroup([
-                dbc.Label('Paneeldikte [mm]', html_for='Paneeldikte'),
-                dbc.Input(id='Paneeldikte', value=0, type='number'),
-            ]),
-            dbc.FormGroup([
-                dbc.Label('Aantal rijen', html_for='Rijen'),
-                dbc.Input(id='Rijen', value=0, type='number'),
-            ]),
-            dbc.FormGroup([
-                dbc.Label("Aantal kolommen", html_for='Kolommen'),
-                dbc.Input(id='Kolommen', value=0, type='number'),
-            ]),
-            dbc.FormGroup([
-                dbc.Label("Kleur frame", html_for='KleurFrame'),
-                dcc.Dropdown(
-                    id='KleurFrame',
-                    options=[
-                        {'label': 'ALU', 'value': 'ALU'},
-                        {'label': 'ALU Zwart', 'value': 'ALZ'}
-                    ],
-                    value='ALU'
-                ),
-            ]),
-            dbc.FormGroup([
-                dbc.Label("Plaat / Paneel", html_for='Toepassing'),
-                dcc.Dropdown(
-                    id='Toepassing',
-                    options=[
-                        {'label': 'Plaat', 'value': 'PLA'},
-                        {'label': 'Paneel', 'value': 'PAN'}
-                    ],
-                    value='Paneel'
-                ),
-            ])
-        ], width={"size": 3, "offset": 1}),
-        dbc.Col([
-            dbc.Button('Download document', id='button'),
-            html.P(id='placeholder'),
-        ], width=4),
-        dbc.Col(
-            html.Div([
-                dbc.Label('Lengte Rail', html_for='lengte_rail'),
-                html.Div(id='lengte_rail'),
-            ]),
-            width=4
-        ),
-    ], form=True),
-    dbc.Row([
-        dbc.Col([
-            html.Div(id='table')
-        ], width={"size": 10, "offset": 1})
+input_tab = dbc.Card(
+    dbc.CardBody([
+        dbc.FormGroup([
+            dbc.Label('Indak / Opdak', html_for='daksysteem'),
+            dcc.Dropdown(
+                id='daksysteem',
+                options=[
+                    {'label': 'Indak', 'value': 'Indak'},
+                    {'label': 'Opdak', 'value': 'Opdak'},
+                ],
+                value='Indak', clearable=False
+            ),
+        ]),
+        dbc.FormGroup([
+            dbc.Label('Landscape / Portrait', html_for='indeling'),
+            dcc.Dropdown(
+                id='indeling',
+                options=[
+                    {'label': 'Landscape', 'value': 'LND'},
+                    {'label': 'Portrait', 'value': 'POR'},
+                ],
+                value='LND', clearable=False
+            ),
+        ]),
+        dbc.FormGroup([
+            dbc.Label('Paneellengte [mm]', html_for='paneellengte'),
+            dbc.Input(id='paneellengte', value=0, min=0, type='number'),
+        ]),
+        dbc.FormGroup([
+            dbc.Label('Paneelbreedte [mm]', html_for='paneelbreedte'),
+            dbc.Input(id='paneelbreedte', value=0, min=0, type='number'),
+        ]),
+        dbc.FormGroup([
+            dbc.Label('Paneeldikte [mm]', html_for='paneeldikte'),
+            dbc.Input(id='paneeldikte', value=0, min=0, type='number'),
+        ]),
+        dbc.FormGroup([
+            dbc.Label('Aantal rijen', html_for='rijen'),
+            dbc.Input(id='rijen', value=0, min=0, type='number'),
+        ]),
+        dbc.FormGroup([
+            dbc.Label("Aantal kolommen", html_for='kolommen'),
+            dbc.Input(id='kolommen', value=0, min=0, type='number'),
+        ]),
+        dbc.FormGroup([
+            dbc.Label("Kleur frame", html_for='kleurFrame'),
+            dcc.Dropdown(
+                id='kleurFrame',
+                options=[
+                    {'label': 'ALU', 'value': 'ALU'},
+                    {'label': 'ALU Zwart', 'value': 'ALZ'}
+                ],
+                value='ALU', clearable=False
+            ),
+        ]),
+        dbc.FormGroup([
+            dbc.Label("Plaat / Paneel", html_for='toepassing'),
+            dcc.Dropdown(
+                id='toepassing',
+                options=[
+                    {'label': 'Plaat', 'value': 'PLA'},
+                    {'label': 'Paneel', 'value': 'PAN'}
+                ],
+                value='PAN', clearable=False
+            ),
+        ]),
+        dbc.FormGroup([
+            dbc.Label('Dakhelling'),
+            dcc.Slider(
+                id='dakhelling',
+                min=5,
+                max=90,
+                value=5,
+            )
+        ])
     ])
-], fluid=True)
+)
+
+table_header = [
+    html.Thead(html.Tr([html.Th("Name"), html.Th("Value")]))
+]
+table_body = [html.Tbody([
+    html.Tr([html.Td("Raillengte"), html.Td(3000, id='raillengte')]),
+    html.Tr([html.Td("Rol"), html.Td("1140 x 10000")]),
+    html.Tr([html.Td("Eindklem"), html.Td(40, id="eindklem")]),
+    html.Tr([html.Td("Tussenklem"), html.Td(22, id="tussenklem")]),
+    html.Tr([html.Td("Anker plaatsen om de"), html.Td(800, id="anker_plaatsen_om_de")]),
+    html.Tr([html.Td("Benodigde overlap"), html.Td(50, id="benodigde_overlap")])
+])]
+
+constants_tab = dbc.Card(
+    dbc.CardBody([
+        dbc.Table(table_header + table_body, bordered=True, hover=True, responsive=True,
+                  striped=True)
+    ])
+)
+
+table_header = [
+    html.Thead(html.Tr([html.Th("Name"), html.Th("Value")]))
+]
+table_body = [html.Tbody([
+    html.Tr([html.Td("Lengthe Rail"), html.Td(id='lengte_rail')]),
+    html.Tr([html.Td("Aantal rijen rails"), html.Td(id="aantal_rijen_rails")]),
+    html.Tr([html.Td("Totale lengte rails"), html.Td(id="totale_lengte_rails")]),
+    html.Tr([html.Td("Aantal rails van 3 meter per rij"), html.Td(id="aantal_rails_van_3_meter_per_rij")]),
+    html.Tr([html.Td("Lengte 1 rol"), html.Td(id="lengte_1_rol")]),
+    html.Tr([html.Td("Breedte pv"), html.Td(id="breedte_pv")]),
+    html.Tr([html.Td("Aantal rijen rollen"), html.Td(id="aantal_rijen_rollen")]),
+    html.Tr([html.Td("Dakgoten"), html.Td(id="dakgoten")]),
+    html.Tr([html.Td("Schuimstrook driehoek profiel"), html.Td(id="schuimstrook_driehoek_profiel")]),
+    html.Tr([html.Td("Railverbinder"), html.Td(id="railverbinder")]),
+    html.Tr([html.Td("Aantal ankers op 1 rail"), html.Td(id="aantal_ankers_op_1_rail")]),
+    html.Tr([html.Td("Ankers"), html.Td(id="ankers")]),
+    html.Tr([html.Td("Schroeven voor beugels"), html.Td(id="schroeven_voor_beugels")]),
+    html.Tr([html.Td("Eindklemmen"), html.Td(id="eindklemmen")]),
+    html.Tr([html.Td("Middenklemmen"), html.Td(id="middenklemmen")]),
+    html.Tr([html.Td("Haak"), html.Td(id="haak")]),
+    html.Tr([html.Td("Schroeven voor hoek"), html.Td(id="schroeven_voor_hoek")]),
+    html.Tr([html.Td("Schroeven voor ankers"), html.Td(id="schroeven_voor_ankers")]),
+    html.Tr([html.Td("Totaal aantal rails van 3m"), html.Td(id="totaal_aantal_rails_van_3m")]),
+])]
+
+results_tab = dbc.Card(
+    dbc.CardBody([
+        dbc.Table(table_header + table_body, bordered=True, hover=True, responsive=True,
+                  striped=True)
+    ])
+)
+
+app.layout = dbc.Tabs(
+    [
+        dbc.Tab(input_tab, label="Invoer"),
+        dbc.Tab(constants_tab, label="Constanten"),
+        dbc.Tab(results_tab, label="Resultaten"),
+        dbc.Tab(
+            dbc.Col(
+                html.Div(id='table', className="pt-3"),
+                width={'size': 10, 'offset': 1}
+            ), label="Leverlijst"
+        )
+    ]
+)
 
 @app.callback(
     Output(component_id='lengte_rail', component_property='children'),
-    Input(component_id='Indeling', component_property='value'),
-    Input(component_id='Paneelbreedte', component_property='value'),
-    Input(component_id='Rijen', component_property='value')
+    Input(component_id='indeling', component_property='value'),
+    Input(component_id='paneelbreedte', component_property='value'),
+    Input(component_id='rijen', component_property='value'),
+    Input(component_id='kolommen', component_property='value'),
+    Input(component_id='tussenklem', component_property='children'),
+    Input(component_id='eindklem', component_property='children'),
 )
-def update_output_div(indeling, paneelbreedte, rijen):
-    result = paneelbreedte * rijen
+def update_output_div(indeling, paneelbreedte, rijen, kolommen, tussenklem, eindklem):
     if indeling == 'LND':
-        result += 10
+        result = rijen * paneelbreedte + ((rijen-1) * tussenklem) + 2 * eindklem + 50
+    else:
+        result = kolommen * paneelbreedte + ((kolommen -1) * tussenklem) + 2 * eindklem + 50
+    return result
+
+@app.callback(
+    Output(component_id='aantal_rijen_rails', component_property='children'),
+    Input(component_id='indeling', component_property='value'),
+    Input(component_id='rijen', component_property='value'),
+    Input(component_id='kolommen', component_property='value'),
+)
+def update_output_div(indeling, rijen, kolommen):
+    if indeling == 'LND':
+        result = 2 * kolommen
+    else:
+        result = 2 * rijen
+    return result
+
+@app.callback(
+    Output(component_id='totale_lengte_rails', component_property='children'),
+    Input(component_id='aantal_rijen_rails', component_property='children'),
+    Input(component_id='lengte_rail', component_property='children'),
+)
+def update_output_div(aantal_rijen_rails, lengte_rail):
+    result = aantal_rijen_rails * lengte_rail
+    return result
+
+@app.callback(
+    Output(component_id='aantal_rails_van_3_meter_per_rij', component_property='children'),
+    Input(component_id='lengte_rail', component_property='children'),
+    Input(component_id='raillengte', component_property='children'),
+)
+def update_output_div(lengte_rail, raillengte):
+    result = math.ceil(lengte_rail / raillengte)
+    return result
+
+@app.callback(
+    Output(component_id='lengte_1_rol',component_property='children'),
+    Input(component_id='kolommen', component_property='value'),
+    Input(component_id='paneellengte', component_property='value'),
+    Input(component_id='tussenklem', component_property='children'),
+    Input(component_id='eindklem', component_property='children'),
+    Input(component_id='lengte_rail', component_property='children'),
+    Input(component_id='indeling', component_property='value')
+)
+def update_output_div(kolommen, paneellengte, tussenklem, eindklem, lengte_rail, indeling):
+    if indeling == 'LND':
+        result = ((kolommen * paneellengte + ((kolommen - 1) * tussenklem) + 2 * eindklem) - 100)
+    else:
+        result = lengte_rail - 100
+    return result
+
+@app.callback(
+    Output(component_id='breedte_pv', component_property='children'),
+    Input(component_id='rijen', component_property='value'),
+    Input(component_id='paneelbreedte', component_property='value'),
+    Input(component_id='paneellengte', component_property='value'),
+    Input(component_id='tussenklem', component_property='children'),
+    Input(component_id='eindklem', component_property='children'),
+    Input(component_id='indeling', component_property='value')
+)
+def update_output_div(rijen, paneelbreedte, paneellengte, tussenklem, eindklem, indeling):
+    if indeling == 'LND':
+        result = (rijen * paneelbreedte + ((rijen - 1) * eindklem) + 2 * eindklem)
+    else:
+        result = (rijen * paneellengte + ((rijen - 1) * tussenklem) + 2 * eindklem)
+    return result
+
+@app.callback(
+    Output(component_id='aantal_rijen_rollen', component_property='children'),
+    Input(component_id='breedte_pv', component_property='children'),
+    Input(component_id='tussenklem', component_property='children'),
+)
+def update_output_div(breedte_pv, tussenklem):
+    result = math.ceil(1 + (breedte_pv + (tussenklem * 10) - 1140) / 940)
+    return result
+
+@app.callback(
+    Output(component_id='dakgoten', component_property='children'),
+    Input(component_id='aantal_rijen_rollen', component_property='children'),
+)
+def update_output_div(aantal_rijen_rollen):
+    result = aantal_rijen_rollen * 2
+    return result
+
+@app.callback(
+    Output(component_id='schuimstrook_driehoek_profiel', component_property='children'),
+    Input(component_id='tussenklem', component_property='children'),
+    Input(component_id='lengte_1_rol', component_property='children'),
+    Input(component_id='eindklem', component_property='children'),
+)
+def update_output_div(tussenklem, lengte_1_rol, eindklem):
+    result = math.ceil((((lengte_1_rol + (tussenklem * 10)) * 2) + lengte_1_rol + (eindklem * 10)) / 1280)
+    return result
+
+@app.callback(
+    Output(component_id='railverbinder', component_property='children'),
+    Input(component_id='aantal_rails_van_3_meter_per_rij', component_property='children'),
+    Input(component_id='aantal_rijen_rails', component_property='children'),
+)
+def update_output_div(aantal_rails_van_3_meter_per_rij, aantal_rijen_rails):
+    if aantal_rails_van_3_meter_per_rij == 1:
+        result = ((aantal_rails_van_3_meter_per_rij - 1) * aantal_rijen_rails)
+    else:
+        result = ((aantal_rails_van_3_meter_per_rij - 1) * aantal_rijen_rails) + 2
+    return result
+
+@app.callback(
+    Output(component_id='aantal_ankers_op_1_rail', component_property='children'),
+    Input(component_id='lengte_rail', component_property='children'),
+    Input(component_id='tussenklem', component_property='children'),
+    Input(component_id='anker_plaatsen_om_de', component_property='children')
+)
+def update_output_div(lengte_rail, tussenklem, anker_plaatsen_om_de):
+    result = math.ceil(1 + (((lengte_rail - (20 * tussenklem)) / anker_plaatsen_om_de)))
+    return result
+
+@app.callback(
+    Output(component_id='ankers',component_property='children'),
+    Input(component_id='aantal_ankers_op_1_rail', component_property='children'),
+    Input(component_id='aantal_rijen_rails', component_property='children'),
+)
+def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
+    result = math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
+    return result
+
+@app.callback(
+    Output(component_id='schroeven_voor_ankers', component_property='children'),
+    Input(component_id='ankers', component_property='children'),
+)
+def update_output_div(ankers):
+    result = math.ceil(ankers)
+    return result
+
+@app.callback(
+    Output(component_id='schroeven_voor_beugels', component_property='children'),
+    Input(component_id='aantal_ankers_op_1_rail', component_property='children'),
+    Input(component_id='aantal_rijen_rails', component_property='children'),
+)
+def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
+    result = math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
+    return result
+
+@app.callback(
+    Output(component_id='eindklemmen', component_property='children'),
+    Input(component_id='aantal_rijen_rails', component_property='children'),
+)
+def update_output_div(aantal_rijen_rails):
+    result = aantal_rijen_rails * 2
+    return result
+
+@app.callback(
+    Output(component_id='middenklemmen', component_property='children'),
+    Input(component_id='aantal_rijen_rails', component_property='children'),
+    Input(component_id='rijen', component_property='value'),
+    Input(component_id='kolommen', component_property='value'),
+    Input(component_id='indeling', component_property='value')
+)
+def update_output_div(aantal_rijen_rails, rijen, kolommen, indeling):
+    if indeling == 'LND':
+        result = aantal_rijen_rails * (rijen -1)
+    else:
+        result = aantal_rijen_rails * (kolommen -1)
+    return result
+
+@app.callback(
+    Output(component_id='haak', component_property='children'),
+    Input(component_id='indeling', component_property='value'),
+    Input(component_id='kolommen', component_property='value'),
+    Input(component_id='rijen', component_property='value'),
+)
+def update_output_div(indeling, kolommen, rijen):
+    if indeling == 'LND':
+        result = (kolommen * 2 * (rijen + 1))
+    else:
+        result = (rijen * 2 * (kolommen +1))
+    return result
+
+@app.callback(
+    Output(component_id='schroeven_voor_hoek', component_property='children'),
+    Input(component_id='haak', component_property='children')
+)
+def update_output_div(haak):
+    result = math.ceil(haak * 2)
+    return result
+
+@app.callback(
+    Output(component_id='totaal_aantal_rails_van_3m', component_property='children'),
+    Input(component_id='totale_lengte_rails', component_property='children'),
+    Input(component_id='raillengte', component_property='children')
+)
+def update_output_div(totale_lengte_rails, raillengte):
+    result = math.ceil(totale_lengte_rails / raillengte)
     return result
 
 @app.callback(
@@ -138,53 +387,6 @@ def update_datatable(rijen):
     data = df_result.to_dict('rows')
     columns = [{"name": i, "id": i, } for i in df.columns]
     return dash_table.DataTable(data=data, columns=columns)
-
-@app.callback(
-    Output("placeholder", "children"),
-    Input('button', 'n_clicks')
-)
-def download(n_clicks):
-    document = Document()
-
-    document.add_heading('Document Title', 0)
-
-    p = document.add_paragraph('A plain paragraph having some ')
-    p.add_run('bold').bold = True
-    p.add_run(' and some ')
-    p.add_run('italic.').italic = True
-
-    document.add_heading('Heading, level 1', level=1)
-    document.add_paragraph('Intense quote', style='Intense Quote')
-
-    document.add_paragraph(
-        'first item in unordered list', style='List Bullet'
-    )
-    document.add_paragraph(
-        'first item in ordered list', style='List Number'
-    )
-
-    #document.add_picture('monty-truth.png', width=Inches(1.25))
-
-    records = (
-        (3, '101', 'Spam'),
-        (7, '422', 'Eggs'),
-        (4, '631', 'Spam, spam, eggs, and spam')
-    )
-
-    table = document.add_table(rows=1, cols=3)
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = 'Qty'
-    hdr_cells[1].text = 'Id'
-    hdr_cells[2].text = 'Desc'
-    for qty, id, desc in records:
-        row_cells = table.add_row().cells
-        row_cells[0].text = str(qty)
-        row_cells[1].text = id
-        row_cells[2].text = desc
-
-    document.add_page_break()
-    print('save document')
-    document.save('demo.docx')
 
 if __name__ == '__main__':
     app.run_server(host='0.0.0.0', port=8080, debug=True)
