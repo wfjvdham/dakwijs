@@ -165,9 +165,11 @@ app.layout = dbc.Tabs(
                 html.Div(id='table', className="pt-3"),
                 width={'size': 10, 'offset': 1}
             ), label="Leverlijst"
-        )
+        ),
+        dbc.Tab(html.Div(id='square', className="square"), label="Visual")
     ]
 )
+
 
 @app.callback(
     Output(component_id='lengte_rail', component_property='children'),
@@ -182,8 +184,9 @@ def update_output_div(indeling, paneelbreedte, rijen, kolommen, tussenklem, eind
     if indeling == 'LND':
         result = rijen * paneelbreedte + ((rijen-1) * tussenklem) + 2 * eindklem + 50
     else:
-        result = kolommen * paneelbreedte + ((kolommen -1) * tussenklem) + 2 * eindklem + 50
+        result = kolommen * paneelbreedte + ((kolommen - 1) * tussenklem) + 2 * eindklem + 50
     return result
+
 
 @app.callback(
     Output(component_id='aantal_rijen_rails', component_property='children'),
@@ -198,6 +201,7 @@ def update_output_div(indeling, rijen, kolommen):
         result = 2 * rijen
     return result
 
+
 @app.callback(
     Output(component_id='totale_lengte_rails', component_property='children'),
     Input(component_id='aantal_rijen_rails', component_property='children'),
@@ -206,6 +210,7 @@ def update_output_div(indeling, rijen, kolommen):
 def update_output_div(aantal_rijen_rails, lengte_rail):
     result = aantal_rijen_rails * lengte_rail
     return result
+
 
 @app.callback(
     Output(component_id='aantal_rails_van_3_meter_per_rij', component_property='children'),
@@ -216,8 +221,9 @@ def update_output_div(lengte_rail, raillengte):
     result = math.ceil(lengte_rail / raillengte)
     return result
 
+
 @app.callback(
-    Output(component_id='lengte_1_rol',component_property='children'),
+    Output(component_id='lengte_1_rol', component_property='children'),
     Input(component_id='kolommen', component_property='value'),
     Input(component_id='paneellengte', component_property='value'),
     Input(component_id='tussenklem', component_property='children'),
@@ -231,6 +237,7 @@ def update_output_div(kolommen, paneellengte, tussenklem, eindklem, lengte_rail,
     else:
         result = lengte_rail - 100
     return result
+
 
 @app.callback(
     Output(component_id='breedte_pv', component_property='children'),
@@ -248,6 +255,7 @@ def update_output_div(rijen, paneelbreedte, paneellengte, tussenklem, eindklem, 
         result = (rijen * paneellengte + ((rijen - 1) * tussenklem) + 2 * eindklem)
     return result
 
+
 @app.callback(
     Output(component_id='aantal_rijen_rollen', component_property='children'),
     Input(component_id='breedte_pv', component_property='children'),
@@ -257,6 +265,7 @@ def update_output_div(breedte_pv, tussenklem):
     result = math.ceil(1 + (breedte_pv + (tussenklem * 10) - 1140) / 940)
     return result
 
+
 @app.callback(
     Output(component_id='dakgoten', component_property='children'),
     Input(component_id='aantal_rijen_rollen', component_property='children'),
@@ -264,6 +273,7 @@ def update_output_div(breedte_pv, tussenklem):
 def update_output_div(aantal_rijen_rollen):
     result = aantal_rijen_rollen * 2
     return result
+
 
 @app.callback(
     Output(component_id='schuimstrook_driehoek_profiel', component_property='children'),
@@ -274,6 +284,7 @@ def update_output_div(aantal_rijen_rollen):
 def update_output_div(tussenklem, lengte_1_rol, eindklem):
     result = math.ceil((((lengte_1_rol + (tussenklem * 10)) * 2) + lengte_1_rol + (eindklem * 10)) / 1280)
     return result
+
 
 @app.callback(
     Output(component_id='railverbinder', component_property='children'),
@@ -287,6 +298,7 @@ def update_output_div(aantal_rails_van_3_meter_per_rij, aantal_rijen_rails):
         result = ((aantal_rails_van_3_meter_per_rij - 1) * aantal_rijen_rails) + 2
     return result
 
+
 @app.callback(
     Output(component_id='aantal_ankers_op_1_rail', component_property='children'),
     Input(component_id='lengte_rail', component_property='children'),
@@ -294,17 +306,19 @@ def update_output_div(aantal_rails_van_3_meter_per_rij, aantal_rijen_rails):
     Input(component_id='anker_plaatsen_om_de', component_property='children')
 )
 def update_output_div(lengte_rail, tussenklem, anker_plaatsen_om_de):
-    result = math.ceil(1 + (((lengte_rail - (20 * tussenklem)) / anker_plaatsen_om_de)))
+    result = math.ceil(1 + ((lengte_rail - (20 * tussenklem)) / anker_plaatsen_om_de))
     return result
 
+
 @app.callback(
-    Output(component_id='ankers',component_property='children'),
+    Output(component_id='ankers', component_property='children'),
     Input(component_id='aantal_ankers_op_1_rail', component_property='children'),
     Input(component_id='aantal_rijen_rails', component_property='children'),
 )
 def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
     result = math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
     return result
+
 
 @app.callback(
     Output(component_id='schroeven_voor_ankers', component_property='children'),
@@ -313,6 +327,7 @@ def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
 def update_output_div(ankers):
     result = math.ceil(ankers)
     return result
+
 
 @app.callback(
     Output(component_id='schroeven_voor_beugels', component_property='children'),
@@ -323,6 +338,7 @@ def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
     result = math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
     return result
 
+
 @app.callback(
     Output(component_id='eindklemmen', component_property='children'),
     Input(component_id='aantal_rijen_rails', component_property='children'),
@@ -330,6 +346,7 @@ def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
 def update_output_div(aantal_rijen_rails):
     result = aantal_rijen_rails * 2
     return result
+
 
 @app.callback(
     Output(component_id='middenklemmen', component_property='children'),
@@ -340,10 +357,11 @@ def update_output_div(aantal_rijen_rails):
 )
 def update_output_div(aantal_rijen_rails, rijen, kolommen, indeling):
     if indeling == 'LND':
-        result = aantal_rijen_rails * (rijen -1)
+        result = aantal_rijen_rails * (rijen - 1)
     else:
-        result = aantal_rijen_rails * (kolommen -1)
+        result = aantal_rijen_rails * (kolommen - 1)
     return result
+
 
 @app.callback(
     Output(component_id='haak', component_property='children'),
@@ -355,8 +373,9 @@ def update_output_div(indeling, kolommen, rijen):
     if indeling == 'LND':
         result = (kolommen * 2 * (rijen + 1))
     else:
-        result = (rijen * 2 * (kolommen +1))
+        result = (rijen * 2 * (kolommen + 1))
     return result
+
 
 @app.callback(
     Output(component_id='schroeven_voor_hoek', component_property='children'),
@@ -366,6 +385,7 @@ def update_output_div(haak):
     result = math.ceil(haak * 2)
     return result
 
+
 @app.callback(
     Output(component_id='totaal_aantal_rails_van_3m', component_property='children'),
     Input(component_id='totale_lengte_rails', component_property='children'),
@@ -374,6 +394,7 @@ def update_output_div(haak):
 def update_output_div(totale_lengte_rails, raillengte):
     result = math.ceil(totale_lengte_rails / raillengte)
     return result
+
 
 @app.callback(
     Output('table', 'children'),
@@ -387,6 +408,15 @@ def update_datatable(rijen):
     data = df_result.to_dict('rows')
     columns = [{"name": i, "id": i, } for i in df.columns]
     return dash_table.DataTable(data=data, columns=columns)
+
+
+@app.callback(
+    Output('square', 'style'),
+    Input('lengte_rail', 'children')
+)
+def update_square(lengte_rail):
+    return {'width': '40vw', 'height': '10vw'}
+
 
 if __name__ == '__main__':
     app.run_server(host='0.0.0.0', port=8080, debug=True)
