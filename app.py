@@ -10,21 +10,16 @@ from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import dash_table
 import math
-
 import pandas as pd
-
 from mailmerge import MailMerge
-
-template = "template.docx"
-document = MailMerge(template)
-print(document.get_merge_fields())
-document.merge(Jannes="dit is een test")
-document.write('test-output.docx')
+import os
+import uuid
+import flask
 
 df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2])
 df['count'] = 0
 
-app = dash.Dash(external_stylesheets=[dbc.themes.JOURNAL])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
 
 input_tab = dbc.Card(
     dbc.CardBody([
@@ -105,7 +100,7 @@ input_tab = dbc.Card(
 )
 
 table_header = [
-    html.Thead(html.Tr([html.Th("Name"), html.Th("Value")]))
+    html.Thead(html.Tr([html.Th("Naam"), html.Th("Waarde")]))
 ]
 table_body = [html.Tbody([
     html.Tr([html.Td("Raillengte"), html.Td(3000, id='raillengte')]),
@@ -124,7 +119,7 @@ constants_tab = dbc.Card(
 )
 
 table_header = [
-    html.Thead(html.Tr([html.Th("Name"), html.Th("Value")]))
+    html.Thead(html.Tr([html.Th("Naam"), html.Th("Waarde")]))
 ]
 table_body = [html.Tbody([
     html.Tr([html.Td("Lengthe Rail"), html.Td(id='lengte_rail')]),
@@ -155,6 +150,39 @@ results_tab = dbc.Card(
     ])
 )
 
+download_tab = dbc.Card(
+    dbc.CardBody([
+        dbc.FormGroup([
+            dbc.Label("Referentie nr.", html_for='referentie_nr'),
+            dbc.Input(id='referentie_nr', type='text'),
+        ]),
+        dbc.FormGroup([
+            dbc.Label("Relatie", html_for='relatie'),
+            dbc.Input(id='relatie', type='text'),
+        ]),
+        dbc.FormGroup([
+            dbc.Label("Contactpersoon", html_for='contactpersoon'),
+            dbc.Input(id='contactpersoon', type='text'),
+        ]),
+        dbc.FormGroup([
+            dbc.Label("Project", html_for='project'),
+            dbc.Input(id='project', type='text'),
+        ]),
+        dbc.FormGroup([
+            dbc.Label("Partijen", html_for='partijen'),
+            dbc.Input(id='partijen', type='text'),
+        ]),
+        dbc.FormGroup([
+            dbc.Label("Adviseur", html_for='adviseur'),
+            dbc.Input(id='adviseur', type='text'),
+        ]),
+        html.A(
+            id='download-link', children='Download Advies',
+            className='btn btn-primary'
+        )
+    ])
+)
+
 app.layout = dbc.Tabs(
     [
         dbc.Tab(input_tab, label="Invoer"),
@@ -166,9 +194,36 @@ app.layout = dbc.Tabs(
                 width={'size': 10, 'offset': 1}
             ), label="Leverlijst"
         ),
-        dbc.Tab(html.Div(id='square', className="square"), label="Visual")
+        dbc.Tab(html.Div(id='square', className="square"), label="Visual"),
+        dbc.Tab(download_tab, label="Download Advies")
     ]
 )
+
+
+@app.callback(
+    Output('download-link', 'href'),
+    [
+        Input('referentie_nr', 'value'), Input('relatie', 'value'),
+    ]
+)
+def update_href(referentie_nr, relatie):
+    template = "Solar template 2021.docx"
+    document = MailMerge(template)
+    #print(document.get_merge_fields())
+    document.merge(
+        Relatie=relatie, Referentienummer=referentie_nr
+    )
+    filename = f"downloads/advies.docx"
+    document.write(filename)
+    return '/{}'.format(filename)
+
+
+@app.server.route('/downloads/<path:path>')
+def serve_static(path):
+    root_dir = os.getcwd()
+    return flask.send_from_directory(
+        os.path.join(root_dir, 'downloads'), path
+    )
 
 
 @app.callback(
