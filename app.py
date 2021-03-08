@@ -13,10 +13,10 @@ import math
 import pandas as pd
 from mailmerge import MailMerge
 import os
-import uuid
 import flask
+import base64
 
-df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2])
+df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2], dtype={'id': str, 'desc': str, 'price': str})
 df['count'] = 0
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
@@ -194,7 +194,7 @@ app.layout = dbc.Tabs(
                 width={'size': 10, 'offset': 1}
             ), label="Leverlijst"
         ),
-        dbc.Tab(html.Div(id='square', className="square"), label="Visual"),
+        dbc.Tab(html.Div(id='square'), label="Visual"),
         dbc.Tab(download_tab, label="Download Advies")
     ]
 )
@@ -453,11 +453,25 @@ def update_output_div(totale_lengte_rails, raillengte):
 
 @app.callback(
     Output('table', 'children'),
-    Input('lengte_rail', 'children')
+    Input('ankers', 'children'),
+    Input('totaal_aantal_rails_van_3m', 'children'),
+    Input('dakgoten', 'children'),
+    Input('schuimstrook_driehoek_profiel', 'children'),
+    Input('railverbinder', 'children'),
+    Input('schroeven_voor_beugels', 'children'),
+    Input('schroeven_voor_ankers', 'children')
 )
-def update_datatable(rijen):
-    df.loc[df['id'] == 770003, ['count']] = round(1.123345667, 1)
-    df.loc[df['id'] == 770212, ['count']] = math.ceil(rijen) * 2
+def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
+                     schuimstrook_driehoek_profiel, railverbinder, schroeven_voor_beugels,
+                     schroeven_voor_ankers):
+
+    df.loc[df['id'] == "0770003", ['count']] = ankers
+    df.loc[df['id'] == "0770212", ['count']] = totaal_aantal_rails_van_3m
+    df.loc[df['id'] == "0770037", ['count']] = dakgoten
+    df.loc[df['id'] == "0340139", ['count']] = schuimstrook_driehoek_profiel
+    df.loc[df['id'] == "0703967", ['count']] = railverbinder
+    df.loc[df['id'] == "0770500", ['count']] = math.ceil(schroeven_voor_beugels / 4)
+    df.loc[df['id'] == "0770501", ['count']] = math.ceil(schroeven_voor_ankers / 30)
 
     df_result = df.loc[df['count'] > 0]
     data = df_result.to_dict('rows')
@@ -466,11 +480,22 @@ def update_datatable(rijen):
 
 
 @app.callback(
-    Output('square', 'style'),
-    Input('lengte_rail', 'children')
+    Output('square', 'children'),
+    Input('rijen', 'value'),
+    Input('kolommen', 'value')
 )
-def update_square(lengte_rail):
-    return {'width': '40vw', 'height': '10vw'}
+def update_square(rijen, kolommen):
+    image_filename = 'paneel.png'  # replace with your own image
+    encoded_image = base64.b64encode(open(image_filename, 'rb').read())
+
+    imgList = []
+    for r in range(rijen):
+        rows = []
+        for k in range(kolommen):
+            rows.append(html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode())))
+        imgList.append(html.Div(rows, className="row"))
+    return imgList
+    #return {'width': '40vw', 'height': '10vw'}
 
 
 if __name__ == '__main__':
