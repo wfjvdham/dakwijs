@@ -6,7 +6,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 import dash_table
 import math
@@ -15,6 +15,7 @@ from mailmerge import MailMerge
 import os
 import flask
 import base64
+import json
 
 df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2], dtype={'id': str, 'desc': str, 'price': str})
 df['count'] = 0
@@ -146,7 +147,8 @@ table_body = [html.Tbody([
 results_tab = dbc.Card(
     dbc.CardBody([
         dbc.Table(table_header + table_body, bordered=True, hover=True, responsive=True,
-                  striped=True)
+                  striped=True),
+        html.Div(id='data', style={'display': 'none'})
     ])
 )
 
@@ -202,17 +204,20 @@ app.layout = dbc.Tabs(
 
 @app.callback(
     Output('download-link', 'href'),
-    [
-        Input('referentie_nr', 'value'), Input('relatie', 'value'),
-    ]
+    Input('referentie_nr', 'value'),
+    Input('relatie', 'value'),
+    Input('data', 'children')
 )
-def update_href(referentie_nr, relatie):
+def update_href(referentie_nr, relatie, json_data):
     template = "Solar template 2021.docx"
     document = MailMerge(template)
     #print(document.get_merge_fields())
     document.merge(
         Relatie=relatie, Referentienummer=referentie_nr
     )
+    if json_data is not None:
+        data = json.loads(json_data)
+        document.merge_rows('Aantal', data)
     filename = f"downloads/advies.docx"
     document.write(filename)
     return '/{}'.format(filename)
@@ -453,6 +458,7 @@ def update_output_div(totale_lengte_rails, raillengte):
 
 @app.callback(
     Output('table', 'children'),
+    Output('data', 'children'),
     Input('ankers', 'children'),
     Input('totaal_aantal_rails_van_3m', 'children'),
     Input('dakgoten', 'children'),
@@ -474,9 +480,11 @@ def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
     df.loc[df['id'] == "0770501", ['count']] = math.ceil(schroeven_voor_ankers / 30)
 
     df_result = df.loc[df['count'] > 0]
+    df_result = df_result.astype({'count': 'str'})
+    df_result.columns = ['Artikelnummer', 'Omschrijving', 'Bruto', 'Aantal']
     data = df_result.to_dict('rows')
-    columns = [{"name": i, "id": i, } for i in df.columns]
-    return dash_table.DataTable(data=data, columns=columns)
+    columns = [{"name": i, "id": i, } for i in df_result.columns]
+    return dash_table.DataTable(data=data, columns=columns), json.dumps(data)
 
 
 @app.callback(
