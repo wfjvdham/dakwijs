@@ -22,7 +22,7 @@ df['count'] = 0
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
 
-input_tab = dbc.Card(
+dropdown_card = dbc.Card(
     dbc.CardBody([
         dbc.FormGroup([
             dbc.Label('Indak / Opdak', html_for='daksysteem'),
@@ -46,6 +46,11 @@ input_tab = dbc.Card(
                 value='LND', clearable=False
             ),
         ]),
+    ])
+)
+
+paneel_card = dbc.Card(
+    dbc.CardBody([
         dbc.FormGroup([
             dbc.Label('Paneellengte [mm]', html_for='paneellengte'),
             dbc.Input(id='paneellengte', value=0, min=0, type='number'),
@@ -58,6 +63,11 @@ input_tab = dbc.Card(
             dbc.Label('Paneeldikte [mm]', html_for='paneeldikte'),
             dbc.Input(id='paneeldikte', value=0, min=0, type='number'),
         ]),
+    ])
+)
+
+rijen_kolommen_card = dbc.Card(
+    dbc.CardBody([
         dbc.FormGroup([
             dbc.Label('Aantal rijen', html_for='rijen'),
             dbc.Input(id='rijen', value=0, min=0, type='number'),
@@ -66,6 +76,11 @@ input_tab = dbc.Card(
             dbc.Label("Aantal kolommen", html_for='kolommen'),
             dbc.Input(id='kolommen', value=0, min=0, type='number'),
         ]),
+    ])
+)
+
+rest_card = dbc.Card(
+    dbc.CardBody([
         dbc.FormGroup([
             dbc.Label("Kleur frame", html_for='kleurFrame'),
             dcc.Dropdown(
@@ -98,6 +113,17 @@ input_tab = dbc.Card(
             )
         ])
     ])
+)
+
+input_tab = dbc.Card(
+    dbc.CardBody(
+        dbc.Row([
+            dbc.Col(dropdown_card, sm=3),
+            dbc.Col(paneel_card, sm=3),
+            dbc.Col(rijen_kolommen_card, sm=3),
+            dbc.Col(rest_card, sm=3)
+        ])
+    )
 )
 
 table_header = [
@@ -196,7 +222,15 @@ app.layout = dbc.Tabs(
                 width={'size': 10, 'offset': 1}
             ), label="Leverlijst"
         ),
-        dbc.Tab(html.Div(id='square'), label="Visual"),
+        dbc.Tab(
+            html.Div(
+                html.Div(
+                    id='square', className="pt-5"
+                ),
+                className="row d-flex justify-content-center"
+            ),
+            label="Visual"
+        ),
         dbc.Tab(download_tab, label="Download Advies")
     ]
 )
