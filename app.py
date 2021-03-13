@@ -17,7 +17,10 @@ import flask
 import base64
 import json
 
-df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2], dtype={'id': str, 'desc': str, 'price': str})
+df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2],
+                   dtype={'id': str, 'desc': str, 'price': str})
+df['price'] = df['price'].str.replace('€', '').str.strip().str.replace(',', '.')
+df = df.astype({'price': float})
 df['count'] = 0
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
@@ -216,12 +219,16 @@ app.layout = dbc.Tabs(
         dbc.Tab(input_tab, label="Invoer"),
         dbc.Tab(constants_tab, label="Constanten"),
         dbc.Tab(results_tab, label="Resultaten"),
-        dbc.Tab(
+        dbc.Tab([
             dbc.Col(
                 html.Div(id='table', className="pt-3"),
                 width={'size': 10, 'offset': 1}
-            ), label="Leverlijst"
-        ),
+            ),
+            dbc.Col(
+                html.Div(id='total_price', className="pt-3"),
+                width={'size': 2, 'offset': 9}
+            )
+        ], label="Leverlijst"),
         dbc.Tab(
             html.Div(
                 html.Div(
@@ -493,6 +500,7 @@ def update_output_div(totale_lengte_rails, raillengte):
 @app.callback(
     Output('table', 'children'),
     Output('data', 'children'),
+    Output('total_price', 'children'),
     Input('ankers', 'children'),
     Input('totaal_aantal_rails_van_3m', 'children'),
     Input('dakgoten', 'children'),
@@ -513,12 +521,14 @@ def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
     df.loc[df['id'] == "0770500", ['count']] = math.ceil(schroeven_voor_beugels / 4)
     df.loc[df['id'] == "0770501", ['count']] = math.ceil(schroeven_voor_ankers / 30)
 
-    df_result = df.loc[df['count'] > 0]
-    df_result = df_result.astype({'count': 'str'})
-    df_result.columns = ['Artikelnummer', 'Omschrijving', 'Bruto', 'Aantal']
+    df_result = df.loc[df['count'] > 0].copy()
+    df_result['total_price'] = df_result['price'] * df_result['count']
+    total_price = "Totale prijs:  {}".format(df_result['total_price'].sum())
+    df_result = df_result.astype({'count': 'str', 'total_price': 'str', 'price': 'str'})
+    df_result.columns = ['Artikelnummer', 'Omschrijving', 'Bruto', 'Aantal', 'Totaal']
     data = df_result.to_dict('rows')
     columns = [{"name": i, "id": i, } for i in df_result.columns]
-    return dash_table.DataTable(data=data, columns=columns), json.dumps(data)
+    return dash_table.DataTable(data=data, columns=columns), json.dumps(data), total_price
 
 
 @app.callback(
@@ -541,4 +551,4 @@ def update_square(rijen, kolommen):
 
 
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0', port=8080, debug=True)
+    app.run_server(host='0.0.0.0', port=5050, debug=True)

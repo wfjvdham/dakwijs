@@ -1,14 +1,14 @@
-version: '3'
+version: '3.7'
 
 services:
-
   dash:
     build:
       context: .
       dockerfile: Dockerfile.dash
-    container_name: dash_dash
-    command: python app.py
-    volumes:
-      - .:/code
+    image: dash:$VERSION
+    container_name: dash
     ports:
-      - "80:8080"
+      - "80:5050"
+    environment:
+      - TARGET=$TARGET
+    restart: unless-stopped
