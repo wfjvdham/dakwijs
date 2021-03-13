@@ -4,3 +4,10 @@
 thead {
     background-color: #f4777c;
 }
+@font-face {
+    font-family: "ubbink";
+    src: url(GOTHIC.TTF);
+}
+* {
+  font-family: "ubbink", sans-serif !important
+}

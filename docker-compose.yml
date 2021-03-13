@@ -4,7 +4,6 @@ services:
   dash:
     build:
       context: .
-      dockerfile: Dockerfile.dash
     image: dash:$VERSION
     container_name: dash
     ports:

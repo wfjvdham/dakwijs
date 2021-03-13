@@ -1,6 +1,8 @@
 FROM python:3.8
 LABEL maintainer "Wim van der Ham <wfjvdham@gmail.com>"
 
+ENV PYTHONUNBUFFERED True
+
 RUN mkdir /code
 WORKDIR /code
 
