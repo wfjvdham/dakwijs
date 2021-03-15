@@ -3,19 +3,23 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Input, Output, State
-import dash_bootstrap_components as dbc
-import dash_table
-import math
-import pandas as pd
-from mailmerge import MailMerge
-import os
-import flask
 import base64
 import json
+import math
+import os
+
+import dash
+import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
+import dash_table
+import flask
+import pandas as pd
+from PIL import Image
+from dash.dependencies import Input, Output
+from mailmerge import MailMerge
+from docx import Document
+
 
 df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2],
                    dtype={'id': str, 'desc': str, 'price': str})
@@ -251,6 +255,14 @@ app.layout = dbc.Tabs(
 )
 def update_href(referentie_nr, relatie, json_data):
     template = "Solar template 2021.docx"
+
+    # doc = Document(template)
+    # tables = doc.tables
+    # p = tables[0].rows[0].cells[0].add_paragraph()
+    # r = p.add_run()
+    # r.add_picture('downloads/image_advies.jpg')
+    # doc.save('addImage.docx')
+
     document = MailMerge(template)
     #print(document.get_merge_fields())
     document.merge(
@@ -536,17 +548,28 @@ def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
     Input('rijen', 'value'),
     Input('kolommen', 'value')
 )
-def update_square(rijen, kolommen):
-    image_filename = 'paneel.png'  # replace with your own image
+def update_square(rijen=3, kolommen=4):
+    image_filename = 'paneel.png'
+
+    panel_image = Image.open(image_filename)
+    new_im = Image.new('RGB', (panel_image.size[0] * kolommen, panel_image.size[1] * rijen))
+
+    for r in range(rijen):
+        for c in range(kolommen):
+            new_im.paste(panel_image, (c * panel_image.size[0], r * panel_image.size[1]))
+
+    new_im.save('downloads/image_advies.jpg')
+
     encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
-    imgList = []
+    img_list = []
     for r in range(rijen):
         rows = []
         for k in range(kolommen):
             rows.append(html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode())))
-        imgList.append(html.Div(rows, className="row"))
-    return imgList
+        img_list.append(html.Div(rows, className="row"))
+
+    return img_list
     #return {'width': '40vw', 'height': '10vw'}
 
 
