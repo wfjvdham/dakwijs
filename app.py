@@ -18,7 +18,7 @@ import pandas as pd
 from PIL import Image
 from dash.dependencies import Input, Output
 from mailmerge import MailMerge
-from docx import Document
+# from docx import Document
 
 
 df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2],
@@ -168,12 +168,13 @@ table_body = [html.Tbody([
     html.Tr([html.Td("Railverbinder"), html.Td(id="railverbinder")]),
     html.Tr([html.Td("Aantal ankers op 1 rail"), html.Td(id="aantal_ankers_op_1_rail")]),
     html.Tr([html.Td("Ankers"), html.Td(id="ankers")]),
+    html.Tr([html.Td("Schroeven voor ankers"), html.Td(id="schroeven_voor_ankers")]),
+    html.Tr([html.Td("Beugels"), html.Td(id="beugels")]),
     html.Tr([html.Td("Schroeven voor beugels"), html.Td(id="schroeven_voor_beugels")]),
     html.Tr([html.Td("Eindklemmen"), html.Td(id="eindklemmen")]),
     html.Tr([html.Td("Middenklemmen"), html.Td(id="middenklemmen")]),
     html.Tr([html.Td("Haak"), html.Td(id="haak")]),
     html.Tr([html.Td("Schroeven voor hoek"), html.Td(id="schroeven_voor_hoek")]),
-    html.Tr([html.Td("Schroeven voor ankers"), html.Td(id="schroeven_voor_ankers")]),
     html.Tr([html.Td("Totaal aantal rails van 3m"), html.Td(id="totaal_aantal_rails_van_3m")]),
 ])]
 
@@ -363,9 +364,9 @@ def update_output_div(kolommen, paneellengte, tussenklem, eindklem, lengte_rail,
 )
 def update_output_div(rijen, paneelbreedte, paneellengte, tussenklem, eindklem, indeling):
     if indeling == 'LND':
-        result = (rijen * paneelbreedte + ((rijen - 1) * eindklem) + 2 * eindklem)
+        result = (rijen * paneelbreedte + ((rijen - 1) * tussenklem) + 2 * eindklem)
     else:
-        result = (rijen * paneellengte + ((rijen - 1) * tussenklem) + 2 * eindklem)
+        result = (rijen * paneellengte + ((rijen - 1) * eindklem) + 2 * eindklem)
     return result
 
 
@@ -392,10 +393,11 @@ def update_output_div(aantal_rijen_rollen):
     Output(component_id='schuimstrook_driehoek_profiel', component_property='children'),
     Input(component_id='tussenklem', component_property='children'),
     Input(component_id='lengte_1_rol', component_property='children'),
+    Input(component_id='breedte_pv', component_property='children'),
     Input(component_id='eindklem', component_property='children'),
 )
-def update_output_div(tussenklem, lengte_1_rol, eindklem):
-    result = math.ceil((((lengte_1_rol + (tussenklem * 10)) * 2) + lengte_1_rol + (eindklem * 10)) / 1280)
+def update_output_div(tussenklem, lengte_1_rol, breedte_pv, eindklem):
+    result = math.ceil((((breedte_pv + (tussenklem * 10)) * 2) + lengte_1_rol + (eindklem * 10)) / 1280)
     return result
 
 
@@ -438,7 +440,17 @@ def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
     Input(component_id='ankers', component_property='children'),
 )
 def update_output_div(ankers):
-    result = math.ceil(ankers)
+    result = math.ceil(ankers * 3.25)
+    return result
+
+
+@app.callback(
+    Output(component_id='beugels', component_property='children'),
+    Input(component_id='aantal_ankers_op_1_rail', component_property='children'),
+    Input(component_id='aantal_rijen_rails', component_property='children'),
+)
+def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
+    result = math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
     return result
 
 
@@ -495,7 +507,7 @@ def update_output_div(indeling, kolommen, rijen):
     Input(component_id='haak', component_property='children')
 )
 def update_output_div(haak):
-    result = math.ceil(haak * 2)
+    result = math.ceil(haak * 2.25)
     return result
 
 
@@ -505,7 +517,7 @@ def update_output_div(haak):
     Input(component_id='raillengte', component_property='children')
 )
 def update_output_div(totale_lengte_rails, raillengte):
-    result = math.ceil(totale_lengte_rails / raillengte)
+    result = math.ceil(totale_lengte_rails / raillengte) + 1
     return result
 
 
