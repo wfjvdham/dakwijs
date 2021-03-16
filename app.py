@@ -18,7 +18,7 @@ import pandas as pd
 from PIL import Image
 from dash.dependencies import Input, Output
 from mailmerge import MailMerge
-# from docx import Document
+from docx import Document
 
 
 df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2],
@@ -460,8 +460,7 @@ def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
     Input(component_id='aantal_rijen_rails', component_property='children'),
 )
 def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
-    result = math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
-    return result
+    return math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
 
 
 @app.callback(
@@ -469,8 +468,7 @@ def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
     Input(component_id='aantal_rijen_rails', component_property='children'),
 )
 def update_output_div(aantal_rijen_rails):
-    result = aantal_rijen_rails * 2
-    return result
+    return aantal_rijen_rails * 2
 
 
 @app.callback(
