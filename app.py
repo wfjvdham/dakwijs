@@ -114,9 +114,9 @@ rest_card = dbc.Card(
             dbc.Label('Dakhelling'),
             dcc.Slider(
                 id='dakhelling',
-                min=5,
+                min=0,
                 max=90,
-                value=5,
+                value=0,
             )
         ])
     ])
@@ -529,12 +529,16 @@ def update_output_div(totale_lengte_rails, raillengte):
     Input('schuimstrook_driehoek_profiel', 'children'),
     Input('railverbinder', 'children'),
     Input('schroeven_voor_beugels', 'children'),
-    Input('schroeven_voor_ankers', 'children')
+    Input('schroeven_voor_ankers', 'children'),
+    Input('kleurFrame', 'children')
 )
 def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
                      schuimstrook_driehoek_profiel, railverbinder, schroeven_voor_beugels,
-                     schroeven_voor_ankers):
+                     schroeven_voor_ankers, kleurFrame, eindklemmen, middenklemmen):
 
+    if daksysteem == 'Indak':
+        df,loc[df['id'] == "0770001", ['count']] = math.ceil(aantal_rijen_rollen)
+        df.loc[df['id'] == "0820239", ['count']] = math.ceil(aantal_rijen_rollen / 100) * 100
     df.loc[df['id'] == "0770003", ['count']] = ankers
     df.loc[df['id'] == "0770212", ['count']] = totaal_aantal_rails_van_3m
     df.loc[df['id'] == "0770037", ['count']] = dakgoten
@@ -542,6 +546,10 @@ def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
     df.loc[df['id'] == "0703967", ['count']] = railverbinder
     df.loc[df['id'] == "0770500", ['count']] = math.ceil(schroeven_voor_beugels / 4)
     df.loc[df['id'] == "0770501", ['count']] = math.ceil(schroeven_voor_ankers / 30)
+    if kleurFrame == 'ALU':
+        df.loc[df['id'] == "0770211", ['count']] = eindklemmen + middenklemmen
+    if kleurFrame == 'ALU Zwart':
+        df.loc[df['id'] == "0770210", ['count']] = eindklemmen + middenklemmen
 
     df_result = df.loc[df['count'] > 0].copy()
     df_result['total_price'] = df_result['price'] * df_result['count']
