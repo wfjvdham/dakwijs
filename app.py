@@ -7,6 +7,8 @@ import base64
 import json
 import math
 import os
+import sys
+import subprocess
 
 import dash
 import dash_bootstrap_components as dbc
@@ -21,7 +23,6 @@ from mailmerge import MailMerge
 from docx import Document
 from docx.shared import Inches
 
-
 df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2],
                    dtype={'id': str, 'desc': str, 'price': str})
 df['price'] = df['price'].str.replace('€', '').str.strip().str.replace(',', '.')
@@ -31,8 +32,9 @@ df['count'] = 0
 template_filename = "Solar template 2021.docx"
 paneel_filename = 'paneel.png'
 temp_advice_filename = 'temp_advies.docx'
-advies_filename = "downloads/advies.docx"
 image_filename = "image_advies.jpg"
+advice_filename_docx = "downloads/advies.docx"
+advice_filename_pdf = "downloads/advies.pdf"
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
 
@@ -225,8 +227,12 @@ download_tab = dbc.Card(
         html.Br(),
         html.Hr(),
         html.A(
-            id='download-link', children='Download Advies',
-            className='btn btn-primary', href='/{}'.format(advies_filename), style={'display': 'none'}
+            id='download-link-docx', children='Download Advies (docx)',
+            className='btn btn-primary', href='/{}'.format(advice_filename_docx), style={'display': 'none'}
+        ),
+        html.A(
+            id='download-link-pdf', children='Download Advies (pdf)',
+            className='btn btn-primary', href='/{}'.format(advice_filename_pdf), style={'display': 'none'}
         )
     ])
 )
@@ -556,7 +562,8 @@ def update_square(rijen=3, kolommen=4):
 
 
 @app.callback(
-    Output('download-link', 'style'),
+    Output('download-link-docx', 'style'),
+    Output('download-link-pdf', 'style'),
     Input('create_advice', 'n_clicks'),
     [
         State('referentie_nr', 'value'),
@@ -568,7 +575,8 @@ def update_square(rijen=3, kolommen=4):
 )
 def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen, kolommen):
 
-    result = {'display': 'none'}
+    docx_button = {'display': 'none'}
+    pdf_button = {'display': 'none'}
     if n_clicks > 0:
         # add data to temp advice
         document = MailMerge(template_filename)
@@ -598,9 +606,15 @@ def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen, kolommen):
         r = p.add_run()
         rescale_factor = 1
         r.add_picture(image_filename, width=Inches(kolommen*rescale_factor), height=Inches(rijen*rescale_factor))
-        doc.save(advies_filename)
-        result = {'display': ''}
-    return result
+        doc.save(advice_filename_docx)
+        docx_button = {'display': ''}
+
+        if sys.platform in ('linux'):
+            args = ['loffice', '--headless', '--convert-to', 'pdf', '--outdir', './downloads', advice_filename_docx]
+            subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            pdf_button = {'display': ''}
+
+    return docx_button, pdf_button
 
 
 if __name__ == '__main__':
