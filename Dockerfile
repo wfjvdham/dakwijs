@@ -1,5 +1,8 @@
 FROM python:3.8
-LABEL maintainer "Wim van der Ham <wfjvdham@gmail.com>"
+LABEL maintainer = "Wim van der Ham <wfjvdham@gmail.com>"
+
+RUN apt-get update && apt-get install -y \
+    libreoffice
 
 ENV PYTHONUNBUFFERED True
 
