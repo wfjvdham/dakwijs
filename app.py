@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 # Run this app with `python app.py` and
-# visit http://127.0.0.1:8050/ in your web browser.
+# visit http://127.0.0.1:5050/ in your web browser.
 
 import base64
 import json
 import math
 import os
+import sys
+import subprocess
 
 import dash
 import dash_bootstrap_components as dbc
@@ -16,16 +18,23 @@ import dash_table
 import flask
 import pandas as pd
 from PIL import Image
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from mailmerge import MailMerge
 from docx import Document
-
+from docx.shared import Inches
 
 df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2],
                    dtype={'id': str, 'desc': str, 'price': str})
 df['price'] = df['price'].str.replace('€', '').str.strip().str.replace(',', '.')
 df = df.astype({'price': float})
 df['count'] = 0
+
+template_filename = "Solar template 2021.docx"
+paneel_filename = 'paneel.png'
+temp_advice_filename = 'temp_advies.docx'
+image_filename = "image_advies.jpg"
+advice_filename_docx = "downloads/advies.docx"
+advice_filename_pdf = "downloads/advies.pdf"
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
 
@@ -212,9 +221,18 @@ download_tab = dbc.Card(
             dbc.Label("Adviseur", html_for='adviseur'),
             dbc.Input(id='adviseur', type='text'),
         ]),
+        html.Button(
+            'Maak Advies', id='create_advice', className='btn btn-secondary', n_clicks=0
+        ),
+        html.Br(),
+        html.Hr(),
         html.A(
-            id='download-link', children='Download Advies',
-            className='btn btn-primary'
+            id='download-link-docx', children='Download Advies (docx)',
+            className='btn btn-primary', href='/{}'.format(advice_filename_docx), style={'display': 'none'}
+        ),
+        html.A(
+            id='download-link-pdf', children='Download Advies (pdf)',
+            className='btn btn-primary', href='/{}'.format(advice_filename_pdf), style={'display': 'none'}
         )
     ])
 )
@@ -246,35 +264,6 @@ app.layout = dbc.Tabs(
         dbc.Tab(download_tab, label="Download Advies")
     ]
 )
-
-
-@app.callback(
-    Output('download-link', 'href'),
-    Input('referentie_nr', 'value'),
-    Input('relatie', 'value'),
-    Input('data', 'children')
-)
-def update_href(referentie_nr, relatie, json_data):
-    template = "Solar template 2021.docx"
-
-    # doc = Document(template)
-    # tables = doc.tables
-    # p = tables[0].rows[0].cells[0].add_paragraph()
-    # r = p.add_run()
-    # r.add_picture('downloads/image_advies.jpg')
-    # doc.save('addImage.docx')
-
-    document = MailMerge(template)
-    #print(document.get_merge_fields())
-    document.merge(
-        Relatie=relatie, Referentienummer=referentie_nr
-    )
-    if json_data is not None:
-        data = json.loads(json_data)
-        document.merge_rows('Aantal', data)
-    filename = f"downloads/advies.docx"
-    document.write(filename)
-    return '/{}'.format(filename)
 
 
 @app.server.route('/downloads/<path:path>')
@@ -548,7 +537,7 @@ def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
     total_price = "Totale prijs:  {}".format(df_result['total_price'].sum())
     df_result = df_result.astype({'count': 'str', 'total_price': 'str', 'price': 'str'})
     df_result.columns = ['Artikelnummer', 'Omschrijving', 'Bruto', 'Aantal', 'Totaal']
-    data = df_result.to_dict('rows')
+    data = df_result.to_dict('records')
     columns = [{"name": i, "id": i, } for i in df_result.columns]
     return dash_table.DataTable(data=data, columns=columns), json.dumps(data), total_price
 
@@ -559,18 +548,7 @@ def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
     Input('kolommen', 'value')
 )
 def update_square(rijen=3, kolommen=4):
-    image_filename = 'paneel.png'
-
-    panel_image = Image.open(image_filename)
-    new_im = Image.new('RGB', (panel_image.size[0] * kolommen, panel_image.size[1] * rijen))
-
-    for r in range(rijen):
-        for c in range(kolommen):
-            new_im.paste(panel_image, (c * panel_image.size[0], r * panel_image.size[1]))
-
-    new_im.save('downloads/image_advies.jpg')
-
-    encoded_image = base64.b64encode(open(image_filename, 'rb').read())
+    encoded_image = base64.b64encode(open(paneel_filename, 'rb').read())
 
     img_list = []
     for r in range(rijen):
@@ -580,7 +558,63 @@ def update_square(rijen=3, kolommen=4):
         img_list.append(html.Div(rows, className="row"))
 
     return img_list
-    #return {'width': '40vw', 'height': '10vw'}
+    # return {'width': '40vw', 'height': '10vw'}
+
+
+@app.callback(
+    Output('download-link-docx', 'style'),
+    Output('download-link-pdf', 'style'),
+    Input('create_advice', 'n_clicks'),
+    [
+        State('referentie_nr', 'value'),
+        State('relatie', 'value'),
+        State('data', 'children'),
+        State('rijen', 'value'),
+        State('kolommen', 'value')
+    ]
+)
+def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen, kolommen):
+
+    docx_button = {'display': 'none'}
+    pdf_button = {'display': 'none'}
+    if n_clicks > 0:
+        # add data to temp advice
+        document = MailMerge(template_filename)
+        # print(document.get_merge_fields())
+        document.merge(
+            Relatie=relatie, Referentienummer=referentie_nr
+        )
+        if json_data is not None:
+            data = json.loads(json_data)
+            document.merge_rows('Aantal', data)
+        document.write(temp_advice_filename)
+
+        # create image for advice
+        panel_image = Image.open(paneel_filename)
+        new_im = Image.new('RGB', (panel_image.size[0] * kolommen, panel_image.size[1] * rijen))
+
+        for r in range(rijen):
+            for c in range(kolommen):
+                new_im.paste(panel_image, (c * panel_image.size[0], r * panel_image.size[1]))
+
+        new_im.save(image_filename)
+
+        # add image to advice
+        doc = Document(temp_advice_filename)
+        tables = doc.tables
+        p = tables[0].rows[0].cells[0].add_paragraph()
+        r = p.add_run()
+        rescale_factor = 1
+        r.add_picture(image_filename, width=Inches(kolommen*rescale_factor), height=Inches(rijen*rescale_factor))
+        doc.save(advice_filename_docx)
+        docx_button = {'display': ''}
+
+        if sys.platform in ('linux'):
+            args = ['loffice', '--headless', '--convert-to', 'pdf', '--outdir', './downloads', advice_filename_docx]
+            subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            pdf_button = {'display': ''}
+
+    return docx_button, pdf_button
 
 
 if __name__ == '__main__':
