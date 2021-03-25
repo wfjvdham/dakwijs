@@ -519,14 +519,18 @@ def update_output_div(totale_lengte_rails, raillengte):
     Input('railverbinder', 'children'),
     Input('schroeven_voor_beugels', 'children'),
     Input('schroeven_voor_ankers', 'children'),
-    Input('kleurFrame', 'children')
+    Input('kleurFrame', 'value'),
+    Input('eindklemmen', 'children'),
+    Input('middenklemmen', 'children'),
+    Input('daksysteem', 'value'),
+    Input('aantal_rijen_rollen', 'children')
 )
 def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
                      schuimstrook_driehoek_profiel, railverbinder, schroeven_voor_beugels,
-                     schroeven_voor_ankers, kleurFrame, eindklemmen, middenklemmen):
+                     schroeven_voor_ankers, kleurFrame, eindklemmen, middenklemmen, daksysteem, aantal_rijen_rollen):
 
     if daksysteem == 'Indak':
-        df,loc[df['id'] == "0770001", ['count']] = math.ceil(aantal_rijen_rollen)
+        df.loc[df['id'] == "0770001", ['count']] = math.ceil(aantal_rijen_rollen)
         df.loc[df['id'] == "0820239", ['count']] = math.ceil(aantal_rijen_rollen / 100) * 100
     df.loc[df['id'] == "0770003", ['count']] = ankers
     df.loc[df['id'] == "0770212", ['count']] = totaal_aantal_rails_van_3m
