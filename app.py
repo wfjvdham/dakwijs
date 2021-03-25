@@ -31,10 +31,16 @@ df['count'] = 0
 
 template_filename = "Solar template 2021.docx"
 paneel_filename = 'paneel.png'
-temp_advice_filename = 'temp_advies.docx'
-image_filename = "image_advies.jpg"
+temp_advice_filename = 'tmp/temp_advies.docx'
+image_filename = "tmp/image_advies.jpg"
 advice_filename_docx = "downloads/advies.docx"
 advice_filename_pdf = "downloads/advies.pdf"
+
+dirs = ['downloads', 'tmp']
+
+for dirPath in dirs:
+    if not os.path.isdir(dirPath):
+        os.mkdir(dirPath)
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
 
