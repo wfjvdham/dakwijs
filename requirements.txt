@@ -1,6 +1,8 @@
-dash~=1.19.0
-Flask~=1.1.2
+dash==1.19.0
+dash-bootstrap-components==0.11.3
+python-docx
+docx-mailmerge==0.5.0
+Flask==1.1.2
 pandas~=1.2.2
 Pillow~=8.1.2
-docx-mailmerge~=0.5.0
-docx~=0.2.4
+openpyxl~=3.0.7

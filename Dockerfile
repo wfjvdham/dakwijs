@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     libreoffice
 
 ENV PYTHONUNBUFFERED True
+ENV DASH_DEBUG False
 
 RUN mkdir /code
 WORKDIR /code

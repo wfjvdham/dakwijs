@@ -7,8 +7,8 @@ import base64
 import json
 import math
 import os
-import sys
 import subprocess
+import sys
 
 import dash
 import dash_bootstrap_components as dbc
@@ -19,9 +19,9 @@ import flask
 import pandas as pd
 from PIL import Image
 from dash.dependencies import Input, Output, State
-from mailmerge import MailMerge
 from docx import Document
 from docx.shared import Inches
+from mailmerge import MailMerge
 
 df = pd.read_excel("./Solor 2021.xlsm", sheet_name=1, names=['id', 'desc', 'price'], usecols=[0, 1, 2],
                    dtype={'id': str, 'desc': str, 'price': str})
@@ -43,6 +43,8 @@ for dirPath in dirs:
         os.mkdir(dirPath)
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
+
+server = app.server
 
 dropdown_card = dbc.Card(
     dbc.CardBody([
@@ -239,15 +241,17 @@ download_tab = dbc.Card(
         html.A(
             id='download-link-pdf', children='Download Advies (pdf)',
             className='btn btn-primary', href='/{}'.format(advice_filename_pdf), style={'display': 'none'}
-        )
+        ),
+        html.Div(constants_tab, style={'display': 'none'}),
+        html.Div(results_tab, style={'display': 'none'})
     ])
 )
 
 app.layout = dbc.Tabs(
     [
         dbc.Tab(input_tab, label="Invoer"),
-        dbc.Tab(constants_tab, label="Constanten"),
-        dbc.Tab(results_tab, label="Resultaten"),
+        # dbc.Tab(constants_tab, label="Constanten"),
+        # dbc.Tab(results_tab, label="Resultaten"),
         dbc.Tab([
             dbc.Col(
                 html.Div(id='table', className="pt-3"),
@@ -552,9 +556,14 @@ def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
 
     df_result = df.loc[df['count'] > 0].copy()
     df_result['total_price'] = df_result['price'] * df_result['count']
-    total_price = "Totale prijs:  {}".format(df_result['total_price'].sum())
+    df_result = df_result.round(2)
+
+    total_price = "Totale prijs: € {}".format(df_result['total_price'].sum())
+
+    df_result['total_price'] = df_result['total_price'].apply("€ {}".format)
     df_result = df_result.astype({'count': 'str', 'total_price': 'str', 'price': 'str'})
     df_result.columns = ['Artikelnummer', 'Omschrijving', 'Bruto', 'Aantal', 'Totaal']
+
     data = df_result.to_dict('records')
     columns = [{"name": i, "id": i, } for i in df_result.columns]
     return dash_table.DataTable(data=data, columns=columns), json.dumps(data), total_price
@@ -567,16 +576,21 @@ def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
 )
 def update_square(rijen=3, kolommen=4):
     encoded_image = base64.b64encode(open(paneel_filename, 'rb').read())
+    img_size = 100
 
     img_list = []
     for r in range(rijen):
         rows = []
         for k in range(kolommen):
-            rows.append(html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode())))
+            rows.append(
+                html.Img(
+                    src='data:image/png;base64,{}'.format(encoded_image.decode()),
+                    style={'height': 1.7*img_size, 'width': img_size}
+                )
+            )
         img_list.append(html.Div(rows, className="row"))
 
     return img_list
-    # return {'width': '40vw', 'height': '10vw'}
 
 
 @app.callback(
@@ -591,7 +605,7 @@ def update_square(rijen=3, kolommen=4):
         State('kolommen', 'value')
     ]
 )
-def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen, kolommen):
+def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen=3, kolommen=2):
 
     docx_button = {'display': 'none'}
     pdf_button = {'display': 'none'}
@@ -609,11 +623,21 @@ def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen, kolommen):
 
         # create image for advice
         panel_image = Image.open(paneel_filename)
-        new_im = Image.new('RGB', (panel_image.size[0] * kolommen, panel_image.size[1] * rijen))
+        # panel_image = panel_image.resize(
+        #     (panel_image.size[0], int(panel_image.size[1] * 1.7)),
+        #     Image.ANTIALIAS
+        # )
+        new_im = Image.new(
+            'RGB',
+            (panel_image.size[0] * kolommen, panel_image.size[1] * rijen)
+        )
 
         for r in range(rijen):
             for c in range(kolommen):
-                new_im.paste(panel_image, (c * panel_image.size[0], r * panel_image.size[1]))
+                new_im.paste(
+                    panel_image,
+                    (c * panel_image.size[0], r * panel_image.size[1])
+                )
 
         new_im.save(image_filename)
 
@@ -623,7 +647,7 @@ def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen, kolommen):
         p = tables[0].rows[0].cells[0].add_paragraph()
         r = p.add_run()
         rescale_factor = 1
-        r.add_picture(image_filename, width=Inches(kolommen*rescale_factor), height=Inches(rijen*rescale_factor))
+        r.add_picture(image_filename, width=Inches(kolommen*rescale_factor), height=Inches(rijen*rescale_factor*1.7))
         doc.save(advice_filename_docx)
         docx_button = {'display': ''}
 
@@ -636,4 +660,9 @@ def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen, kolommen):
 
 
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0', port=5050, debug=True)
+    if 'DASH_DEBUG' in os.environ.keys():
+        print('run in prod mode')
+        app.run_server(host='0.0.0.0', port=5050, debug=False)
+    else:
+        print("run in dev mode")
+        app.run_server(host='0.0.0.0', port=5050, debug=True)
