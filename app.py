@@ -16,7 +16,6 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
-import flask
 import pandas as pd
 from PIL import Image
 from dash.dependencies import Input, Output, State
@@ -595,13 +594,17 @@ def update_square(rijen=3, kolommen=4):
         State('session-id', 'children'),
         State('referentie_nr', 'value'),
         State('relatie', 'value'),
+        State('contactpersoon', 'value'),
+        State('project', 'value'),
+        State('partijen', 'value'),
+        State('adviseur', 'value'),
         State('data', 'children'),
         State('rijen', 'value'),
         State('kolommen', 'value')
     ]
 )
-def create_advice(n_clicks, session_id, referentie_nr, relatie, json_data,
-                  rijen=3, kolommen=2):
+def create_advice(n_clicks, session_id, referentie_nr, relatie, contactpersoon, project, partijen,
+                  adviseur, json_data, rijen=3, kolommen=2):
 
     docx_button = {'display': 'none'}
     pdf_button = {'display': 'none'}
@@ -619,36 +622,39 @@ def create_advice(n_clicks, session_id, referentie_nr, relatie, json_data,
         document = MailMerge(template_filename)
         # print(document.get_merge_fields())
         document.merge(
-            Relatie=relatie, Referentienummer=referentie_nr
+            Relatie=relatie, Referentienummer=referentie_nr, Contactpersoon=contactpersoon,
+            Projectnummer=project, Partijen=partijen, Adviseur=adviseur
         )
         if json_data is not None:
             data = json.loads(json_data)
             document.merge_rows('Aantal', data)
         document.write(temp_advice_filename)
 
-        # create image for advice
-        panel_image = Image.open(paneel_filename)
-        new_im = Image.new(
-            'RGB',
-            (panel_image.size[0] * kolommen, panel_image.size[1] * rijen)
-        )
-
-        for r in range(rijen):
-            for c in range(kolommen):
-                new_im.paste(
-                    panel_image,
-                    (c * panel_image.size[0], r * panel_image.size[1])
-                )
-
-        new_im.save(image_filename)
-
-        # add image to advice
         doc = Document(temp_advice_filename)
-        tables = doc.tables
-        p = tables[0].rows[0].cells[0].add_paragraph()
-        r = p.add_run()
-        rescale_factor = 1
-        r.add_picture(image_filename, width=Inches(kolommen*rescale_factor), height=Inches(rijen*rescale_factor*1.7))
+        if rijen > 0 and kolommen > 0:
+            # create image for advice
+            panel_image = Image.open(paneel_filename)
+            new_im = Image.new(
+                'RGB',
+                (panel_image.size[0] * kolommen, panel_image.size[1] * rijen)
+            )
+
+            for r in range(rijen):
+                for c in range(kolommen):
+                    new_im.paste(
+                        panel_image,
+                        (c * panel_image.size[0], r * panel_image.size[1])
+                    )
+
+            new_im.save(image_filename)
+
+            # add image to advice
+            tables = doc.tables
+            p = tables[0].rows[0].cells[0].add_paragraph()
+            r = p.add_run()
+            rescale_factor = 1
+            r.add_picture(image_filename, width=Inches(kolommen*rescale_factor),
+                          height=Inches(rijen*rescale_factor*1.7))
         doc.save(advice_filename_docx)
         docx_button = {'display': ''}
 
