@@ -9,6 +9,7 @@ import math
 import os
 import subprocess
 import sys
+import uuid
 
 import dash
 import dash_bootstrap_components as dbc
@@ -31,16 +32,9 @@ df['count'] = 0
 
 template_filename = "Solar template 2021.docx"
 paneel_filename = 'paneel.png'
-temp_advice_filename = 'tmp/temp_advies.docx'
-image_filename = "tmp/image_advies.jpg"
-advice_filename_docx = "downloads/advies.docx"
-advice_filename_pdf = "downloads/advies.pdf"
 
-dirs = ['downloads', 'tmp']
-
-for dirPath in dirs:
-    if not os.path.isdir(dirPath):
-        os.mkdir(dirPath)
+if not os.path.isdir('static'):
+    os.mkdir('static')
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
 
@@ -203,85 +197,85 @@ results_tab = dbc.Card(
     ])
 )
 
-download_tab = dbc.Card(
-    dbc.CardBody([
-        dbc.FormGroup([
-            dbc.Label("Referentie nr.", html_for='referentie_nr'),
-            dbc.Input(id='referentie_nr', type='text'),
-        ]),
-        dbc.FormGroup([
-            dbc.Label("Relatie", html_for='relatie'),
-            dbc.Input(id='relatie', type='text'),
-        ]),
-        dbc.FormGroup([
-            dbc.Label("Contactpersoon", html_for='contactpersoon'),
-            dbc.Input(id='contactpersoon', type='text'),
-        ]),
-        dbc.FormGroup([
-            dbc.Label("Project", html_for='project'),
-            dbc.Input(id='project', type='text'),
-        ]),
-        dbc.FormGroup([
-            dbc.Label("Partijen", html_for='partijen'),
-            dbc.Input(id='partijen', type='text'),
-        ]),
-        dbc.FormGroup([
-            dbc.Label("Adviseur", html_for='adviseur'),
-            dbc.Input(id='adviseur', type='text'),
-        ]),
-        html.Button(
-            'Maak Advies', id='create_advice', className='btn btn-secondary', n_clicks=0
-        ),
-        html.Br(),
-        html.Hr(),
-        html.A(
-            id='download-link-docx', children='Download Advies (docx)',
-            className='btn btn-primary', href='/{}'.format(advice_filename_docx), style={'display': 'none'}
-        ),
-        html.A(
-            id='download-link-pdf', children='Download Advies (pdf)',
-            className='btn btn-primary', href='/{}'.format(advice_filename_pdf), style={'display': 'none'}
-        ),
-        html.Div(constants_tab, style={'display': 'none'}),
-        html.Div(results_tab, style={'display': 'none'})
-    ])
-)
 
-app.layout = dbc.Tabs(
-    [
-        dbc.Tab(input_tab, label="Invoer"),
-        # dbc.Tab(constants_tab, label="Constanten"),
-        # dbc.Tab(results_tab, label="Resultaten"),
-        dbc.Tab([
-            dbc.Col(
-                html.Div(id='table', className="pt-3"),
-                width={'size': 10, 'offset': 1}
+def serve_layout():
+    session_id = str(uuid.uuid4())
+
+    download_tab = dbc.Card(
+        dbc.CardBody([
+            dbc.FormGroup([
+                dbc.Label("Referentie nr.", html_for='referentie_nr'),
+                dbc.Input(id='referentie_nr', type='text'),
+            ]),
+            dbc.FormGroup([
+                dbc.Label("Relatie", html_for='relatie'),
+                dbc.Input(id='relatie', type='text'),
+            ]),
+            dbc.FormGroup([
+                dbc.Label("Contactpersoon", html_for='contactpersoon'),
+                dbc.Input(id='contactpersoon', type='text'),
+            ]),
+            dbc.FormGroup([
+                dbc.Label("Project", html_for='project'),
+                dbc.Input(id='project', type='text'),
+            ]),
+            dbc.FormGroup([
+                dbc.Label("Partijen", html_for='partijen'),
+                dbc.Input(id='partijen', type='text'),
+            ]),
+            dbc.FormGroup([
+                dbc.Label("Adviseur", html_for='adviseur'),
+                dbc.Input(id='adviseur', type='text'),
+            ]),
+            html.Button(
+                'Maak Advies', id='create_advice', className='btn btn-secondary', n_clicks=0
             ),
-            dbc.Col(
-                html.Div(id='total_price', className="pt-3"),
-                width={'size': 2, 'offset': 9}
-            )
-        ], label="Leverlijst"),
-        dbc.Tab(
-            html.Div(
-                html.Div(
-                    id='square', className="pt-5"
-                ),
-                className="row d-flex justify-content-center"
+            html.Br(),
+            html.Hr(),
+            html.A(
+                id='download-link-docx', children='Download Advies (docx)',
+                className='btn btn-primary', href='/static/{}/advies.docx'.format(session_id)
             ),
-            label="Visual"
-        ),
-        dbc.Tab(download_tab, label="Download Advies")
-    ]
-)
-
-
-@app.server.route('/downloads/<path:path>')
-def serve_static(path):
-    root_dir = os.getcwd()
-    return flask.send_from_directory(
-        os.path.join(root_dir, 'downloads'), path
+            html.A(
+                id='download-link-pdf', children='Download Advies (pdf)',
+                className='btn btn-primary', href='/static/{}/advies.pdf'.format(session_id), style={'display': 'none'}
+            ),
+            html.Div(constants_tab, style={'display': 'none'}),
+            html.Div(results_tab, style={'display': 'none'})
+        ])
     )
+
+    return dbc.Tabs(
+        [
+            dbc.Tab(input_tab, label="Invoer"),
+            # dbc.Tab(constants_tab, label="Constanten"),
+            # dbc.Tab(results_tab, label="Resultaten"),
+            dbc.Tab([
+                dbc.Col(
+                    html.Div(id='table', className="pt-3"),
+                    width={'size': 10, 'offset': 1}
+                ),
+                dbc.Col(
+                    html.Div(id='total_price', className="pt-3"),
+                    width={'size': 2, 'offset': 9}
+                )
+            ], label="Leverlijst"),
+            dbc.Tab(
+                html.Div(
+                    html.Div(
+                        id='square', className="pt-5"
+                    ),
+                    className="row d-flex justify-content-center"
+                ),
+                label="Visual"
+            ),
+            dbc.Tab(download_tab, label="Download Advies"),
+            html.Div(session_id, id='session-id', style={'display': 'none'})
+        ]
+    )
+
+
+app.layout = serve_layout
 
 
 @app.callback(
@@ -598,6 +592,7 @@ def update_square(rijen=3, kolommen=4):
     Output('download-link-pdf', 'style'),
     Input('create_advice', 'n_clicks'),
     [
+        State('session-id', 'children'),
         State('referentie_nr', 'value'),
         State('relatie', 'value'),
         State('data', 'children'),
@@ -605,11 +600,21 @@ def update_square(rijen=3, kolommen=4):
         State('kolommen', 'value')
     ]
 )
-def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen=3, kolommen=2):
+def create_advice(n_clicks, session_id, referentie_nr, relatie, json_data,
+                  rijen=3, kolommen=2):
 
     docx_button = {'display': 'none'}
     pdf_button = {'display': 'none'}
     if n_clicks > 0:
+        session_dir = 'static/{}'.format(session_id)
+
+        temp_advice_filename = '{}/temp_advies.docx'.format(session_dir)
+        image_filename = "{}/image_advies.jpg".format(session_dir)
+        advice_filename_docx = "{}/advies.docx".format(session_dir)
+
+        if not os.path.isdir(session_dir):
+            os.mkdir(session_dir)
+
         # add data to temp advice
         document = MailMerge(template_filename)
         # print(document.get_merge_fields())
@@ -623,10 +628,6 @@ def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen=3, kolommen
 
         # create image for advice
         panel_image = Image.open(paneel_filename)
-        # panel_image = panel_image.resize(
-        #     (panel_image.size[0], int(panel_image.size[1] * 1.7)),
-        #     Image.ANTIALIAS
-        # )
         new_im = Image.new(
             'RGB',
             (panel_image.size[0] * kolommen, panel_image.size[1] * rijen)
@@ -651,8 +652,9 @@ def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen=3, kolommen
         doc.save(advice_filename_docx)
         docx_button = {'display': ''}
 
-        if sys.platform in ('linux'):
-            args = ['loffice', '--headless', '--convert-to', 'pdf', '--outdir', './downloads', advice_filename_docx]
+        if sys.platform in 'linux':
+            args = ['loffice', '--headless', '--convert-to', 'pdf', '--outdir',
+                    './{}'.format(session_dir), advice_filename_docx]
             subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             pdf_button = {'display': ''}
 
@@ -661,8 +663,6 @@ def create_advice(n_clicks, referentie_nr, relatie, json_data, rijen=3, kolommen
 
 if __name__ == '__main__':
     if 'DASH_DEBUG' in os.environ.keys():
-        print('run in prod mode')
         app.run_server(host='0.0.0.0', port=5050, debug=False)
     else:
-        print("run in dev mode")
         app.run_server(host='0.0.0.0', port=5050, debug=True)
