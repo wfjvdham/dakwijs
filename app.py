@@ -48,6 +48,7 @@ dropdown_card = dbc.Card(
                 options=[
                     {'label': 'Indak', 'value': 'Indak'},
                     {'label': 'Opdak', 'value': 'Opdak'},
+                    {'label': 'Plat dak', 'value': 'Plat dak'},
                 ],
                 value='Indak', clearable=False
             ),
@@ -146,7 +147,7 @@ input_tab = dbc.Card(
 table_header = [
     html.Thead(html.Tr([html.Th("Naam"), html.Th("Waarde")]))
 ]
-table_body = [html.Tbody([
+table_body_constant = [html.Tbody([
     html.Tr([html.Td("Raillengte"), html.Td(3000, id='raillengte')]),
     html.Tr([html.Td("Rol"), html.Td("1140 x 10000")]),
     html.Tr([html.Td("Eindklem"), html.Td(40, id="eindklem")]),
@@ -157,7 +158,7 @@ table_body = [html.Tbody([
 
 constants_tab = dbc.Card(
     dbc.CardBody([
-        dbc.Table(table_header + table_body, bordered=True, hover=True, responsive=True,
+        dbc.Table(table_header + table_body_constant, bordered=True, hover=True, responsive=True,
                   striped=True)
     ])
 )
@@ -165,13 +166,15 @@ constants_tab = dbc.Card(
 table_header = [
     html.Thead(html.Tr([html.Th("Naam"), html.Th("Waarde")]))
 ]
-table_body = [html.Tbody([
+table_body_variabel = [html.Tbody([
     html.Tr([html.Td("Lengthe Rail"), html.Td(id='lengte_rail')]),
     html.Tr([html.Td("Aantal rijen rails"), html.Td(id="aantal_rijen_rails")]),
     html.Tr([html.Td("Totale lengte rails"), html.Td(id="totale_lengte_rails")]),
     html.Tr([html.Td("Aantal rails van 3 meter per rij"), html.Td(id="aantal_rails_van_3_meter_per_rij")]),
     html.Tr([html.Td("Lengte 1 rol"), html.Td(id="lengte_1_rol")]),
     html.Tr([html.Td("Breedte pv"), html.Td(id="breedte_pv")]),
+    html.Tr([html.Td("Hoogte pv"), html.Td(id="hoogte_pv")]),
+    html.Tr([html.Td("Aantal rollen"), html.Td(id="aantal_rollen")]),
     html.Tr([html.Td("Aantal rijen rollen"), html.Td(id="aantal_rijen_rollen")]),
     html.Tr([html.Td("Dakgoten"), html.Td(id="dakgoten")]),
     html.Tr([html.Td("Schuimstrook driehoek profiel"), html.Td(id="schuimstrook_driehoek_profiel")]),
@@ -179,18 +182,21 @@ table_body = [html.Tbody([
     html.Tr([html.Td("Aantal ankers op 1 rail"), html.Td(id="aantal_ankers_op_1_rail")]),
     html.Tr([html.Td("Ankers"), html.Td(id="ankers")]),
     html.Tr([html.Td("Schroeven voor ankers"), html.Td(id="schroeven_voor_ankers")]),
-    html.Tr([html.Td("Beugels"), html.Td(id="beugels")]),
-    html.Tr([html.Td("Schroeven voor beugels"), html.Td(id="schroeven_voor_beugels")]),
+    html.Tr([html.Td("Montageset"), html.Td(id="montageset")]),
     html.Tr([html.Td("Eindklemmen"), html.Td(id="eindklemmen")]),
     html.Tr([html.Td("Middenklemmen"), html.Td(id="middenklemmen")]),
     html.Tr([html.Td("Haak"), html.Td(id="haak")]),
-    html.Tr([html.Td("Schroeven voor hoek"), html.Td(id="schroeven_voor_hoek")]),
+    html.Tr([html.Td("Neopreen schroeven"), html.Td(id="neopreen_schroeven")]),
     html.Tr([html.Td("Totaal aantal rails van 3m"), html.Td(id="totaal_aantal_rails_van_3m")]),
+    html.Tr([html.Td("Ubiflex 6m"), html.Td(id="ubiflex6m")]),
+    html.Tr([html.Td("Ubiflex 12m"), html.Td(id="ubiflex12m")]),
+    html.Tr([html.Td("Ubiflex lengte"), html.Td(id="ubiflex_lengte")]),
+    html.Tr([html.Td("Ubiflex kit"), html.Td(id="ubiflexkit")]),
 ])]
 
 results_tab = dbc.Card(
     dbc.CardBody([
-        dbc.Table(table_header + table_body, bordered=True, hover=True, responsive=True,
+        dbc.Table(table_header + table_body_variabel, bordered=True, hover=True, responsive=True,
                   striped=True),
         html.Div(id='data', style={'display': 'none'})
     ])
@@ -361,14 +367,39 @@ def update_output_div(rijen, paneelbreedte, paneellengte, tussenklem, eindklem, 
         result = (rijen * paneellengte + ((rijen - 1) * eindklem) + 2 * eindklem)
     return result
 
+@app.callback(
+    Output(component_id='hoogte_pv', component_property='children'),
+    Input(component_id='paneelbreedte', component_property='value'),
+    Input(component_id='rijen', component_property='value'),
+    Input(component_id='paneeldikte', component_property='value'),
+    Input(component_id='eindklem', component_property='children'),
+    Input(component_id='paneellengte', component_property='value'),
+    Input(component_id='indeling', component_property='value')
+)
+def update_output_div(paneelbreedte, rijen, paneeldikte, eindklem, paneellengte, indeling):
+    if indeling == 'LND':
+        result = paneelbreedte * rijen + (rijen - 1) * paneeldikte + 2 * eindklem
+    else:
+        result = paneellengte * rijen + (rijen - 1) * paneeldikte
+    return result
+
+
+@app.callback(
+    Output(component_id='aantal_rollen', component_property='children'),
+    Input(component_id='hoogte_pv',component_property='children'),
+    Input(component_id='breedte_pv',component_property='children')
+)
+def update_output_div(hoogte_pv, breedte_pv):
+    result = math.ceil((math.ceil(hoogte_pv / 940) * (breedte_pv + 400)) / 10000)
+    return result
+
 
 @app.callback(
     Output(component_id='aantal_rijen_rollen', component_property='children'),
-    Input(component_id='breedte_pv', component_property='children'),
-    Input(component_id='tussenklem', component_property='children'),
+    Input(component_id='hoogte_pv', component_property='children')
 )
-def update_output_div(breedte_pv, tussenklem):
-    result = math.ceil(1 + (breedte_pv + (tussenklem * 10) - 1140) / 940)
+def update_output_div(hoogte_pv):
+    result = math.ceil(hoogte_pv / 940)
     return result
 
 
@@ -383,13 +414,11 @@ def update_output_div(aantal_rijen_rollen):
 
 @app.callback(
     Output(component_id='schuimstrook_driehoek_profiel', component_property='children'),
-    Input(component_id='tussenklem', component_property='children'),
-    Input(component_id='lengte_1_rol', component_property='children'),
+    Input(component_id='hoogte_pv', component_property='children'),
     Input(component_id='breedte_pv', component_property='children'),
-    Input(component_id='eindklem', component_property='children'),
 )
-def update_output_div(tussenklem, lengte_1_rol, breedte_pv, eindklem):
-    result = math.ceil((((breedte_pv + (tussenklem * 10)) * 2) + lengte_1_rol + (eindklem * 10)) / 1280)
+def update_output_div(hoogte_pv, breedte_pv):
+    result = math.ceil((hoogte_pv * 2 + breedte_pv) / 1280) + 1
     return result
 
 
@@ -399,21 +428,17 @@ def update_output_div(tussenklem, lengte_1_rol, breedte_pv, eindklem):
     Input(component_id='aantal_rijen_rails', component_property='children'),
 )
 def update_output_div(aantal_rails_van_3_meter_per_rij, aantal_rijen_rails):
-    if aantal_rails_van_3_meter_per_rij == 1:
-        result = ((aantal_rails_van_3_meter_per_rij - 1) * aantal_rijen_rails)
-    else:
-        result = ((aantal_rails_van_3_meter_per_rij - 1) * aantal_rijen_rails) + 2
+    result = (aantal_rails_van_3_meter_per_rij - 1) * aantal_rijen_rails
     return result
 
 
 @app.callback(
     Output(component_id='aantal_ankers_op_1_rail', component_property='children'),
     Input(component_id='lengte_rail', component_property='children'),
-    Input(component_id='tussenklem', component_property='children'),
     Input(component_id='anker_plaatsen_om_de', component_property='children')
 )
-def update_output_div(lengte_rail, tussenklem, anker_plaatsen_om_de):
-    result = math.ceil(1 + ((lengte_rail - (20 * tussenklem)) / anker_plaatsen_om_de))
+def update_output_div(lengte_rail, anker_plaatsen_om_de):
+    result = math.ceil(lengte_rail / anker_plaatsen_om_de)
     return result
 
 
@@ -432,27 +457,18 @@ def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
     Input(component_id='ankers', component_property='children'),
 )
 def update_output_div(ankers):
-    result = math.ceil(ankers * 3.25)
+    result = math.ceil(ankers * 3)
     return result
 
 
 @app.callback(
-    Output(component_id='beugels', component_property='children'),
+    Output(component_id='montageset', component_property='children'),
     Input(component_id='aantal_ankers_op_1_rail', component_property='children'),
     Input(component_id='aantal_rijen_rails', component_property='children'),
 )
 def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
     result = math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
     return result
-
-
-@app.callback(
-    Output(component_id='schroeven_voor_beugels', component_property='children'),
-    Input(component_id='aantal_ankers_op_1_rail', component_property='children'),
-    Input(component_id='aantal_rijen_rails', component_property='children'),
-)
-def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
-    return math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
 
 
 @app.callback(
@@ -480,24 +496,20 @@ def update_output_div(aantal_rijen_rails, rijen, kolommen, indeling):
 
 @app.callback(
     Output(component_id='haak', component_property='children'),
-    Input(component_id='indeling', component_property='value'),
-    Input(component_id='kolommen', component_property='value'),
-    Input(component_id='rijen', component_property='value'),
+    Input(component_id='montageset', component_property='children'),
 )
-def update_output_div(indeling, kolommen, rijen):
-    if indeling == 'LND':
-        result = (kolommen * 2 * (rijen + 1))
-    else:
-        result = (rijen * 2 * (kolommen + 1))
+def update_output_div(montageset):
+    result = montageset
     return result
 
 
 @app.callback(
-    Output(component_id='schroeven_voor_hoek', component_property='children'),
-    Input(component_id='haak', component_property='children')
+    Output(component_id='neopreen_schroeven', component_property='children'),
+    Input(component_id='dakgoten', component_property='children'),
+    Input(component_id='aantal_rollen', component_property='children')
 )
-def update_output_div(haak):
-    result = math.ceil(haak * 2.25)
+def update_output_div(dakgoten, aantal_rollen):
+    result = dakgoten * 4 + aantal_rollen * 10
     return result
 
 
@@ -507,7 +519,44 @@ def update_output_div(haak):
     Input(component_id='raillengte', component_property='children')
 )
 def update_output_div(totale_lengte_rails, raillengte):
-    result = math.ceil(totale_lengte_rails / raillengte) + 1
+    result = math.ceil(totale_lengte_rails / raillengte)
+    return result
+
+
+@app.callback(
+    Output(component_id='ubiflex_lengte', component_property='children'),
+    Input(component_id='breedte_pv',component_property='children')
+)
+def update_output_div(breedte_pv):
+    result = (breedte_pv + 400) / 1000
+    return result
+
+
+@app.callback(
+    Output(component_id='ubiflex6m', component_property='children'),
+    Output(component_id='ubiflex12m', component_property='children'),
+    Input(component_id='ubiflex_lengte', component_property='children')
+)
+def update_output_div(ubiflex_lengte):
+    aantal6m = math.ceil(ubiflex_lengte/6)
+    aantal12m = math.floor(aantal6m/2)
+    if (aantal6m % 2) == 0:
+        aantal6m = 0
+    else:
+        aantal6m = 1
+    return aantal6m, aantal12m
+
+
+@app.callback(
+    Output(component_id='ubiflexkit', component_property='children'),
+    Input(component_id='ubiflex6m', component_property='children'),
+    Input(component_id='ubiflex12m', component_property='children')
+)
+def update_output_div(ubiflex6m, ubiflex12m):
+    if ubiflex6m + ubiflex12m == 0:
+        result = 0
+    else:
+        result = ubiflex6m + (ubiflex12m * 2 )
     return result
 
 
@@ -519,33 +568,52 @@ def update_output_div(totale_lengte_rails, raillengte):
     Input('totaal_aantal_rails_van_3m', 'children'),
     Input('dakgoten', 'children'),
     Input('schuimstrook_driehoek_profiel', 'children'),
+    Input('aantal_rollen', 'children'),
+    Input('neopreen_schroeven', 'children'),
     Input('railverbinder', 'children'),
-    Input('schroeven_voor_beugels', 'children'),
+    Input('haak', 'children'),
     Input('schroeven_voor_ankers', 'children'),
     Input('kleurFrame', 'value'),
     Input('eindklemmen', 'children'),
     Input('middenklemmen', 'children'),
     Input('daksysteem', 'value'),
-    Input('aantal_rijen_rollen', 'children')
+    Input('rijen', 'value'),
+    Input('kolommen', 'value'),
+    Input('montageset', 'children'),
+    Input('ubiflex6m', 'children'),
+    Input('ubiflex12m', 'children'),
+    Input('ubiflexkit', 'children')
 )
 def update_datatable(ankers, totaal_aantal_rails_van_3m, dakgoten,
-                     schuimstrook_driehoek_profiel, railverbinder, schroeven_voor_beugels,
-                     schroeven_voor_ankers, kleurFrame, eindklemmen, middenklemmen, daksysteem, aantal_rijen_rollen):
+                     schuimstrook_driehoek_profiel, aantal_rollen, 
+                     neopreen_schroeven, railverbinder, haak,
+                     schroeven_voor_ankers, kleurFrame, eindklemmen,
+                     middenklemmen, daksysteem,
+                     rijen, kolommen, montageset,
+                     ubiflex6m, ubiflex12m, ubiflexkit):
 
     if daksysteem == 'Indak':
-        df.loc[df['id'] == "0770001", ['count']] = math.ceil(aantal_rijen_rollen)
-        df.loc[df['id'] == "0820239", ['count']] = math.ceil(aantal_rijen_rollen / 100) * 100
+        df.loc[df['id'] == "0340139", ['count']] = schuimstrook_driehoek_profiel
+        df.loc[df['id'] == "0770001", ['count']] = math.ceil(aantal_rollen)
+        df.loc[df['id'] == "0770037", ['count']] = dakgoten
+        df.loc[df['id'] == "0770501", ['count']] = math.ceil(schroeven_voor_ankers / 30)
+        df.loc[df['id'] == "0820239", ['count']] = math.ceil(neopreen_schroeven / 100) * 100
+    if daksysteem == 'Opdak':
+        df.loc[df['id'] == "0770039", ['count']] = haak
+    if daksysteem == 'Plat dak':
+        df.loc[df['id'] == "0770307", ['count']] = rijen * kolommen
+        df.loc[df['id'] == "0770308", ['count']] = rijen * kolommen
     df.loc[df['id'] == "0770003", ['count']] = ankers
     df.loc[df['id'] == "0770212", ['count']] = totaal_aantal_rails_van_3m
-    df.loc[df['id'] == "0770037", ['count']] = dakgoten
-    df.loc[df['id'] == "0340139", ['count']] = schuimstrook_driehoek_profiel
     df.loc[df['id'] == "0703967", ['count']] = railverbinder
-    df.loc[df['id'] == "0770500", ['count']] = math.ceil(schroeven_voor_beugels / 4)
-    df.loc[df['id'] == "0770501", ['count']] = math.ceil(schroeven_voor_ankers / 30)
+    df.loc[df['id'] == "0770500", ['count']] = math.ceil(montageset / 4)
     if kleurFrame == 'ALU':
         df.loc[df['id'] == "0770211", ['count']] = eindklemmen + middenklemmen
     if kleurFrame == 'ALU Zwart':
         df.loc[df['id'] == "0770210", ['count']] = eindklemmen + middenklemmen
+    df.loc[df['id'] == "0534033", ['count']] = ubiflex6m
+    df.loc[df['id'] == "0534040", ['count']] = ubiflex12m
+    df.loc[df['id'] == "0534066", ['count']] = ubiflexkit
 
     df_result = df.loc[df['count'] > 0].copy()
     df_result['total_price'] = df_result['price'] * df_result['count']
