@@ -320,8 +320,7 @@ def update_output_div(indeling, rijen, kolommen):
     Input(component_id='lengte_rail', component_property='children'),
 )
 def update_output_div(aantal_rijen_rails, lengte_rail):
-    result = aantal_rijen_rails * lengte_rail
-    return result
+    return aantal_rijen_rails * lengte_rail
 
 
 @app.callback(
@@ -330,8 +329,7 @@ def update_output_div(aantal_rijen_rails, lengte_rail):
     Input(component_id='raillengte', component_property='children'),
 )
 def update_output_div(lengte_rail, raillengte):
-    result = math.ceil(lengte_rail / raillengte)
-    return result
+    return math.ceil(lengte_rail / raillengte)
 
 
 @app.callback(
@@ -377,10 +375,9 @@ def update_output_div(rijen, paneelbreedte, paneellengte, tussenklem, eindklem, 
     Input(component_id='indeling', component_property='value')
 )
 def update_output_div(paneelbreedte, rijen, paneeldikte, eindklem, paneellengte, indeling):
+    result = paneellengte * rijen + (rijen - 1) * paneeldikte
     if indeling == 'LND':
         result = paneelbreedte * rijen + (rijen - 1) * paneeldikte + 2 * eindklem
-    else:
-        result = paneellengte * rijen + (rijen - 1) * paneeldikte
     return result
 
 
@@ -390,17 +387,14 @@ def update_output_div(paneelbreedte, rijen, paneeldikte, eindklem, paneellengte,
     Input(component_id='breedte_pv',component_property='children')
 )
 def update_output_div(hoogte_pv, breedte_pv):
-    result = math.ceil((math.ceil(hoogte_pv / 940) * (breedte_pv + 400)) / 10000)
-    return result
-
+    return math.ceil((math.ceil(hoogte_pv / 940) * (breedte_pv + 400)) / 10000)
 
 @app.callback(
     Output(component_id='aantal_rijen_rollen', component_property='children'),
     Input(component_id='hoogte_pv', component_property='children')
 )
 def update_output_div(hoogte_pv):
-    result = math.ceil(hoogte_pv / 940)
-    return result
+    return math.ceil(hoogte_pv / 940)
 
 
 @app.callback(
@@ -408,8 +402,7 @@ def update_output_div(hoogte_pv):
     Input(component_id='aantal_rijen_rollen', component_property='children'),
 )
 def update_output_div(aantal_rijen_rollen):
-    result = aantal_rijen_rollen * 2
-    return result
+    return  aantal_rijen_rollen * 2
 
 
 @app.callback(
@@ -418,8 +411,7 @@ def update_output_div(aantal_rijen_rollen):
     Input(component_id='breedte_pv', component_property='children'),
 )
 def update_output_div(hoogte_pv, breedte_pv):
-    result = math.ceil((hoogte_pv * 2 + breedte_pv) / 1280) + 1
-    return result
+    return math.ceil((hoogte_pv * 2 + breedte_pv) / 1280) + 1
 
 
 @app.callback(
@@ -428,8 +420,7 @@ def update_output_div(hoogte_pv, breedte_pv):
     Input(component_id='aantal_rijen_rails', component_property='children'),
 )
 def update_output_div(aantal_rails_van_3_meter_per_rij, aantal_rijen_rails):
-    result = (aantal_rails_van_3_meter_per_rij - 1) * aantal_rijen_rails
-    return result
+    return (aantal_rails_van_3_meter_per_rij - 1) * aantal_rijen_rails
 
 
 @app.callback(
@@ -438,9 +429,8 @@ def update_output_div(aantal_rails_van_3_meter_per_rij, aantal_rijen_rails):
     Input(component_id='anker_plaatsen_om_de', component_property='children')
 )
 def update_output_div(lengte_rail, anker_plaatsen_om_de):
-    result = math.ceil(lengte_rail / anker_plaatsen_om_de)
-    return result
-
+    return math.ceil(lengte_rail / anker_plaatsen_om_de)
+    
 
 @app.callback(
     Output(component_id='ankers', component_property='children'),
@@ -448,8 +438,7 @@ def update_output_div(lengte_rail, anker_plaatsen_om_de):
     Input(component_id='aantal_rijen_rails', component_property='children'),
 )
 def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
-    result = math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
-    return result
+    return math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
 
 
 @app.callback(
@@ -457,8 +446,7 @@ def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
     Input(component_id='ankers', component_property='children'),
 )
 def update_output_div(ankers):
-    result = math.ceil(ankers * 3)
-    return result
+    return math.ceil(ankers * 3)
 
 
 @app.callback(
@@ -467,8 +455,7 @@ def update_output_div(ankers):
     Input(component_id='aantal_rijen_rails', component_property='children'),
 )
 def update_output_div(aantal_ankers_op_1_rail, aantal_rijen_rails):
-    result = math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
-    return result
+    return math.ceil(aantal_ankers_op_1_rail * aantal_rijen_rails)
 
 
 @app.callback(
@@ -499,8 +486,7 @@ def update_output_div(aantal_rijen_rails, rijen, kolommen, indeling):
     Input(component_id='montageset', component_property='children'),
 )
 def update_output_div(montageset):
-    result = montageset
-    return result
+    return montageset
 
 
 @app.callback(
@@ -509,9 +495,8 @@ def update_output_div(montageset):
     Input(component_id='aantal_rollen', component_property='children')
 )
 def update_output_div(dakgoten, aantal_rollen):
-    result = dakgoten * 4 + aantal_rollen * 10
-    return result
-
+    return dakgoten * 4 + aantal_rollen * 10
+    
 
 @app.callback(
     Output(component_id='totaal_aantal_rails_van_3m', component_property='children'),
@@ -519,8 +504,7 @@ def update_output_div(dakgoten, aantal_rollen):
     Input(component_id='raillengte', component_property='children')
 )
 def update_output_div(totale_lengte_rails, raillengte):
-    result = math.ceil(totale_lengte_rails / raillengte)
-    return result
+    return math.ceil(totale_lengte_rails / raillengte)
 
 
 @app.callback(
@@ -528,8 +512,7 @@ def update_output_div(totale_lengte_rails, raillengte):
     Input(component_id='breedte_pv',component_property='children')
 )
 def update_output_div(breedte_pv):
-    result = (breedte_pv + 400) / 1000
-    return result
+    return (breedte_pv + 400) / 1000
 
 
 @app.callback(
